@@ -901,33 +901,56 @@ function updateSubtitleStyles() {
   }
 
   style.textContent = `
-    .bili-subtitle-x-subtitle-panel-minor-group {
+    .bili-subtitle-x-subtitle-panel {
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
-      text-align: center !important;
+      pointer-events: none !important;
+      /* Memaksa jarak renggang antara kotak atas dan bawah */
+      gap: 12px !important; 
+    }
+    .bili-subtitle-x-subtitle-panel-text, .translated-subtitle {
+      pointer-events: auto !important;
     }
     .bili-subtitle-x-subtitle-panel-text {
       position: relative !important;
       display: inline-block !important;
       font-size: ${fontSizePx} !important;
       background-color: rgba(0, 0, 0, ${opacity}) !important;
+      color: white !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important; 
       line-height: 1.4 !important;
       text-align: center !important;
       white-space: pre-wrap !important;
+      margin-bottom: 4px !important; 
+    }
+    .bili-subtitle-x-subtitle-panel-minor-group {
+      position: relative !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      /* Menambahkan margin atas tambahan pada wadah grup bawah */
+      margin-top: 4px !important;
     }
     .bili-subtitle-x-subtitle-panel-minor-group .translated-subtitle {
       position: relative !important;
       display: inline-block !important;
       font-size: ${fontSizePx} !important;
       color: white !important;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
       background: rgba(0, 0, 0, ${opacity}) !important;
-      padding: 4px 8px !important;
-      border-radius: 4px !important;
-      margin-top: 5px !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important; 
+      margin-top: 0 !important;
       line-height: 1.4 !important;
+    }
+    /* If only translation is visible */
+    .bili-subtitle-x-subtitle-panel-text.hide-subtitle + .bili-subtitle-x-subtitle-panel-minor-group .translated-subtitle {
+      border-radius: 6px !important;
     }
     .ytp-caption-window-container .translated-subtitle {
       display: block !important;
@@ -936,8 +959,8 @@ function updateSubtitleStyles() {
       color: #eaeaea !important;
       background: rgba(0, 0, 0, ${opacity}) !important;
       padding: 4px 8px !important;
-      border-radius: 4px !important;
-      margin-top: 5px !important;
+      border-radius: 6px !important;
+      margin-top: 12px !important;
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
     }
     .translated-subtitle.hide {
