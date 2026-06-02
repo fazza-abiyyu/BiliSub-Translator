@@ -98,6 +98,9 @@ function makeElementDraggable(el) {
     el.style.setProperty('cursor', 'grab', 'important');
     document.removeEventListener('mousemove', elementDrag);
     document.removeEventListener('mouseup', closeDragElement);
+    
+    // Simpan status bahwa elemen ini sudah pernah di-drag secara manual
+    el.dataset.hasBeenManualDragged = 'true';
   }
 
   function applyDraggedPosition(target) {
@@ -924,39 +927,36 @@ function updateSubtitleStyles() {
   }
 
   style.textContent = `
-    /* PERBAIKAN: Hanya paksa overflow visible agar teks tidak terpotong */
-    html body .bpx-player-video-area,
+    /* PERBAIKAN: Hanya paksa overflow agar tidak terpotong, kembalikan posisi ke aslinya */
+    html body .bpx-player-video-area label,
     html body .bpx-player-video-wrap {
       overflow: visible !important;
     }
 
-    /* Hanya berikan z-index tinggi pada container subtitle agar tidak menutupi kontrol */
+    /* Gunakan z-index yang tinggi tapi terbatas di dalam konteks player saja */
+    /* Pastikan subtitle tidak keluar dari batas video player (overflow: hidden pada root player) */
     html body .bpx-player-subtitle-wrap,
     html body .bili-subtitle-x-subtitle-panel,
     html body .bili-subtitle-x-subtitle-panel-text,
     html body .bili-subtitle,
     html body .bilibili-player-video-subtitle {
       overflow: visible !important;
-      z-index: 2147483647 !important;
+      z-index: 1000 !important; /* Gunakan nilai yang masuk akal agar tidak menembus header situs */
+      pointer-events: none !important;
     }
 
-    html body .bpx-player-subtitle-wrap,
-    html body .bili-subtitle-x-subtitle-panel,
-    html body .bili-subtitle,
-    html body .bilibili-player-video-subtitle {
-      bottom: 12% !important; 
-      height: auto !important;
-      max-height: none !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: flex-end !important;
-      pointer-events: none !important; /* Cegah menutupi klik ke bar kontrol */
+    /* Pastikan elemen player utama tetap membatasi konten agar tidak tembus ke luar video saat di-drag */
+    .bpx-player-primary-area, .bili-video-player {
+      position: relative !important;
+      overflow: hidden !important; 
     }
+
+    /* MATIKAN paksaan bottom persentase yang bikin dia naik ke atas */
+    /* Biarkan posisi asli dari Bilibili yang bekerja */
     
     html body .bili-subtitle-x-subtitle-panel-text, 
     html body .translated-subtitle {
-      pointer-events: auto !important; /* Tapi izinkan interaksi (drag/select) pada teksnya saja */
+      pointer-events: auto !important;
       word-wrap: break-word !important;
     }
     
@@ -988,7 +988,7 @@ function updateSubtitleStyles() {
       width: max-content !important;
       max-width: 90vw !important;
       pointer-events: auto !important;
-      z-index: 2147483647 !important;
+      z-index: 1001 !important;
     }
     
     html body .custom-bili-subtitle-group .translated-subtitle {
