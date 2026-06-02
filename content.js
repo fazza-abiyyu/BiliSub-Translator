@@ -1,3 +1,5 @@
+// 
+
 // =====================================================
 // Bilibili & YouTube Double Subtitles - Hybrid Architecture
 // Inspired by Immersive Translate for high-performance and zero lag
@@ -453,6 +455,15 @@ async function startTranslationLoop() {
   }
 }
 
+// Helper: Ekstrak teks original bersih (tanpa elemen terjemahan kita)
+function getCleanOriginalText(el) {
+  if (!el) return '';
+  const clone = el.cloneNode(true);
+  const customGrp = clone.querySelector('.custom-bili-subtitle-group');
+  if (customGrp) customGrp.remove();
+  return clone.textContent || '';
+}
+
 // Initializer
 function initialize() {
   const isYouTube = window.location.hostname.includes('youtube.com');
@@ -536,6 +547,7 @@ function onTimeUpdate() {
   if (!subtitlePanel) return;
 
   const origTextEl = subtitlePanel.querySelector('.bili-subtitle-x-subtitle-panel-text');
+  
   if (!origTextEl || !origTextEl.textContent?.trim() || origTextEl.style.display === 'none') {
     const isHiddenByUs = origTextEl && origTextEl.classList.contains('hide-subtitle');
     if (!origTextEl || !origTextEl.textContent?.trim() || (origTextEl.style.display === 'none' && !isHiddenByUs)) {
@@ -561,9 +573,9 @@ function onTimeUpdate() {
   if (!translated) return;
 
   if (origTextEl) {
-    const rawText = origTextEl.textContent || '';
+    const rawText = getCleanOriginalText(origTextEl);
     if (rawText.includes('\n') || !/[\u4e00-\u9fa5]/.test(rawText.replace(/\|/g, '').trim())) {
-      const existing = subtitlePanel.querySelector('.translated-subtitle');
+      const existing = origTextEl.querySelector('.translated-subtitle');
       if (existing) {
         existing.textContent = '';
         existing.classList.add('hide');
@@ -630,9 +642,9 @@ async function handleSubtitleUpdate(subtitlePanel) {
   const originalTextEl = subtitlePanel.querySelector('.bili-subtitle-x-subtitle-panel-text');
   if (!originalTextEl) return;
 
-  const rawText = originalTextEl.textContent || '';
+  const rawText = getCleanOriginalText(originalTextEl);
   if (rawText.includes('\n') || !/[\u4e00-\u9fa5]/.test(rawText.replace(/\|/g, '').trim())) {
-    const existing = subtitlePanel.querySelector('.translated-subtitle');
+    const existing = originalTextEl.querySelector('.translated-subtitle');
     if (existing) {
       existing.textContent = '';
       existing.classList.add('hide');
@@ -642,7 +654,7 @@ async function handleSubtitleUpdate(subtitlePanel) {
 
   const originalText = rawText.replace(/\|/g, '').trim();
   if (!originalText || !/[\u4e00-\u9fa5]/.test(originalText)) {
-    const el = subtitlePanel.querySelector('.translated-subtitle');
+    const el = originalTextEl.querySelector('.translated-subtitle');
     if (el) {
       el.textContent = '';
       el.classList.add('hide');
@@ -661,7 +673,7 @@ async function handleSubtitleUpdate(subtitlePanel) {
     return;
   }
 
-  const el = subtitlePanel.querySelector('.translated-subtitle');
+  const el = originalTextEl.querySelector('.translated-subtitle');
   if (el) {
     el.textContent = '';
     el.classList.add('hide');
@@ -678,25 +690,37 @@ async function handleSubtitleUpdate(subtitlePanel) {
   translationCache.set(originalText, translated);
 
   const currentTextEl = subtitlePanel.querySelector('.bili-subtitle-x-subtitle-panel-text');
-  const currentText = (currentTextEl ? currentTextEl.textContent : '').replace(/\|/g, '').trim();
+  const currentText = getCleanOriginalText(currentTextEl).replace(/\|/g, '').trim();
   if (currentText === originalText) {
     injectTranslatedSubtitle(translated, subtitlePanel);
   }
 }
 
 function injectTranslatedSubtitle(translatedText, subtitlePanel) {
-  let minorGroup = subtitlePanel.querySelector('.bili-subtitle-x-subtitle-panel-minor-group');
-  if (!minorGroup) {
-    minorGroup = document.createElement('div');
-    minorGroup.className = 'bili-subtitle-x-subtitle-panel-minor-group';
-    subtitlePanel.appendChild(minorGroup);
+  const originalTextEl = subtitlePanel.querySelector('.bili-subtitle-x-subtitle-panel-text');
+  if (!originalTextEl) return;
+
+  // PERBAIKAN DINAMIS: Pastikan originalTextEl bertindak sebagai positioning context (jika static)
+  const computedStyle = window.getComputedStyle(originalTextEl);
+  if (computedStyle.position === 'static') {
+    originalTextEl.style.setProperty('position', 'relative', 'important');
+  }
+  
+  // PERBAIKAN DINAMIS UTAMA: Cegah Bilibili memotong child element dengan overflow:hidden bawaannya
+  originalTextEl.style.setProperty('overflow', 'visible', 'important');
+
+  let customGroup = originalTextEl.querySelector('.custom-bili-subtitle-group');
+  if (!customGroup) {
+    customGroup = document.createElement('div');
+    customGroup.className = 'custom-bili-subtitle-group';
+    originalTextEl.appendChild(customGroup);
   }
 
-  let el = minorGroup.querySelector('.translated-subtitle');
+  let el = customGroup.querySelector('.translated-subtitle');
   if (!el) {
     el = document.createElement('div');
     el.className = 'translated-subtitle';
-    minorGroup.appendChild(el);
+    customGroup.appendChild(el);
   }
 
   if (el.textContent !== translatedText) {
@@ -834,9 +858,10 @@ function applySubtitleMode() {
   
   const origTexts = document.querySelectorAll('.bili-subtitle-x-subtitle-panel-text');
   origTexts.forEach(origText => {
-    const text = origText.textContent || '';
+    const text = getCleanOriginalText(origText);
+    
     if (isTranslationOnly) {
-      if (text.includes('\n')) {
+      if (text.includes('\n')) { // Network fallback (fallback if DOM translation skips)
         if (!origText.dataset.originalDualText) {
           origText.dataset.originalDualText = text;
         }
@@ -871,10 +896,8 @@ function updateSubtitleStyles() {
   }
 
   if (!settings.autoTranslate) {
-    const existingBiliTranslation = document.querySelector('.bili-subtitle-x-subtitle-panel .translated-subtitle');
-    if (existingBiliTranslation) {
-      existingBiliTranslation.remove();
-    }
+    const existingBiliTranslation = document.querySelectorAll('.custom-bili-subtitle-group');
+    existingBiliTranslation.forEach(el => el.remove());
     const existingYtTranslation = document.querySelector('.ytp-caption-window-container .translated-subtitle');
     if (existingYtTranslation) {
       existingYtTranslation.remove();
@@ -901,73 +924,118 @@ function updateSubtitleStyles() {
   }
 
   style.textContent = `
-    .bili-subtitle-x-subtitle-panel {
+    /* PERBAIKAN: Hanya paksa overflow visible agar teks tidak terpotong */
+    html body .bpx-player-video-area,
+    html body .bpx-player-video-wrap {
+      overflow: visible !important;
+    }
+
+    /* Hanya berikan z-index tinggi pada container subtitle agar tidak menutupi kontrol */
+    html body .bpx-player-subtitle-wrap,
+    html body .bili-subtitle-x-subtitle-panel,
+    html body .bili-subtitle-x-subtitle-panel-text,
+    html body .bili-subtitle,
+    html body .bilibili-player-video-subtitle {
+      overflow: visible !important;
+      z-index: 2147483647 !important;
+    }
+
+    html body .bpx-player-subtitle-wrap,
+    html body .bili-subtitle-x-subtitle-panel,
+    html body .bili-subtitle,
+    html body .bilibili-player-video-subtitle {
+      bottom: 12% !important; 
+      height: auto !important;
+      max-height: none !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
-      justify-content: center !important;
-      pointer-events: none !important;
-      /* Memaksa jarak renggang antara kotak atas dan bawah */
-      gap: 12px !important; 
+      justify-content: flex-end !important;
+      pointer-events: none !important; /* Cegah menutupi klik ke bar kontrol */
     }
-    .bili-subtitle-x-subtitle-panel-text, .translated-subtitle {
-      pointer-events: auto !important;
+    
+    html body .bili-subtitle-x-subtitle-panel-text, 
+    html body .translated-subtitle {
+      pointer-events: auto !important; /* Tapi izinkan interaksi (drag/select) pada teksnya saja */
+      word-wrap: break-word !important;
     }
-    .bili-subtitle-x-subtitle-panel-text {
-      position: relative !important;
-      display: inline-block !important;
-      font-size: ${fontSizePx} !important;
+    
+    html body .bili-subtitle-x-subtitle-panel-text {
+      /* Hanya tambahkan styling visual untuk kotak aslinya, TANPA reset position */
       background-color: rgba(0, 0, 0, ${opacity}) !important;
       color: white !important;
-      padding: 4px 10px !important;
-      border-radius: 6px !important; 
+      padding: 6px 12px !important;
+      border-radius: 8px !important; 
       line-height: 1.4 !important;
       text-align: center !important;
       white-space: pre-wrap !important;
-      margin-bottom: 4px !important; 
+      border: none !important;
+      font-size: ${fontSizePx} !important;
+      display: inline-block !important; /* Agar lebarnya membungkus kotak */
+      z-index: 999999 !important;
     }
-    .bili-subtitle-x-subtitle-panel-minor-group {
-      position: relative !important;
+    
+    /* Wadah kustom disematkan secara absolut 100% tepat di sisi bawah teks asli */
+    html body .custom-bili-subtitle-group {
+      position: absolute !important;
+      top: calc(100% + 4px) !important; /* Jarak 4px dari kotak aslinya */
+      left: 50% !important;
+      transform: translateX(-50%) !important; /* Menengahkannya mengikuti teks asli */
       display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
       justify-content: center !important;
       text-align: center !important;
-      /* Menambahkan margin atas tambahan pada wadah grup bawah */
-      margin-top: 4px !important;
+      margin: 0 !important;
+      width: max-content !important;
+      max-width: 90vw !important;
+      pointer-events: auto !important;
+      z-index: 2147483647 !important;
     }
-    .bili-subtitle-x-subtitle-panel-minor-group .translated-subtitle {
-      position: relative !important;
+    
+    html body .custom-bili-subtitle-group .translated-subtitle {
       display: inline-block !important;
       font-size: ${fontSizePx} !important;
       color: white !important;
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
       background: rgba(0, 0, 0, ${opacity}) !important;
-      padding: 4px 10px !important;
-      border-radius: 6px !important; 
-      margin-top: 0 !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important; 
+      margin: 0 !important;
       line-height: 1.4 !important;
+      border: none !important;
+      white-space: pre-wrap !important;
     }
-    /* If only translation is visible */
-    .bili-subtitle-x-subtitle-panel-text.hide-subtitle + .bili-subtitle-x-subtitle-panel-minor-group .translated-subtitle {
-      border-radius: 6px !important;
+    
+    /* Untuk mode "Translation Only": Menyembunyikan parent tanpa menghilangkan child (terjemahan) */
+    html body .bili-subtitle-x-subtitle-panel-text.hide-subtitle {
+      background-color: transparent !important;
+      color: transparent !important;
+      font-size: 0 !important;
+      padding: 0 !important;
+      min-height: 0 !important;
+      height: 0 !important;
     }
-    .ytp-caption-window-container .translated-subtitle {
+    html body .bili-subtitle-x-subtitle-panel-text.hide-subtitle .custom-bili-subtitle-group {
+      top: 0 !important; /* Naikan posisi terjemahan karena aslinya dihilangkan */
+    }
+
+    html body .ytp-caption-window-container .translated-subtitle {
       display: block !important;
       text-align: center !important;
       font-size: ${fontSizePx} !important;
       color: #eaeaea !important;
       background: rgba(0, 0, 0, ${opacity}) !important;
       padding: 4px 8px !important;
-      border-radius: 6px !important;
+      border-radius: 8px !important;
       margin-top: 12px !important;
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9) !important;
+      z-index: 999999 !important;
+      position: relative !important;
     }
     .translated-subtitle.hide {
       display: none !important;
     }
     .hide-subtitle {
-      display: none !important;
+      /* display none di-handle spesifik di bilibili untuk cegah child hilang */
     }
   `;
 
