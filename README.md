@@ -1,58 +1,85 @@
-# 🌏 BiliSub Translator
+# 🌏 BiliSub
 
-```ascii
- ____  _ _ _ _     _ _ _    ____        _     _   _ _   _      
-| __ )(_) (_) |__ (_) (_)  / ___| _   _| |__ | |_(_) |_| | ___ 
-|  _ \| | | | '_ \| | | |  \___ \| | | | '_ \| __| | __| |/ _ \
-| |_) | | | | |_) | | | |   ___) | |_| | |_) | |_| | |_| |  __/
-|____/|_|_|_|_.__/|_|_|_|  |____/ \__,_|_.__/ \__|_|\__|_|\___|
-                                                                
-     🔄 Real-time Translation | 🌍 Multi-language | 🎯 Zero-config
+```
+██████╗ ██╗██╗     ██╗███████╗██╗   ██╗██████╗ 
+██╔══██╗██║██║     ██║██╔════╝██║   ██║██╔══██╗
+██████╔╝██║██║     ██║███████╗██║   ██║██████╔╝
+██╔══██╗██║██║     ██║╚════██║██║   ██║██╔══██╗
+██████╔╝██║███████╗██║███████║╚██████╔╝██████╔╝
+╚═════╝ ╚═╝╚══════╝╚═╝╚══════╝ ╚═════╝ ╚═════╝ 
+
+🔄 Real-time Translation | 🌍 Multi-language
 ```
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Languages](https://img.shields.io/badge/Languages-100+-blue)
-![Platform](https://img.shields.io/badge/Platform-Chrome-green)
+![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge-green)
+
+**English** | [Indonesian](./README_ID.md) | [中文](./README_ZH.md)
 
 > 🚀 A Chrome/Edge extension that adds real-time multi-language subtitles to Bilibili videos using Google Translate. Fire-and-forget translation that just works!
 
 ---
 
 > [!NOTE]
-> 🤝 **Projek Gabungan (Combined Project)**  
-> Projek ini merupakan gabungan dari projek **Bilibili Double Subtitle** dan versi tandingan/alternatif ringan dari **Immersive Translation**. Dirancang khusus untuk menghadirkan performa tinggi, bebas lag, dan bebas hambatan saat menerjemahkan subtitel Bilibili secara real-time.
+> 🤝 **Project Origins**
+>
+> **BiliSub** is built on two main sources of inspiration:
+> - [**Bilibili Double Subtitle**](https://github.com/zhutoutoutousan/bilibili-double-subtitle) — **Core foundation**. The dual-subtitle architecture, player subtitle detection mechanism, and Bilibili API integration are adopted from this project as the base.
+> - [**Immersive Translation**](https://github.com/immersive-translate) — **Realtime tuning reference**. High-precision translation concepts, zero-lag approach, and immersive UX were studied from this project then adapted for Bilibili use case precision.
+>
+> The result is a lightweight, fast extension focused on a smooth Bilibili watching experience.
+
+## ⚠️ Requirements
+
+> [!IMPORTANT]
+> **BiliSub requires AI-Generated Chinese (AI-Zh) subtitles** to translate.
+>
+> This extension automatically detects and enables the `ai-zh` / `zh-CN` subtitle track from Bilibili videos. If a video **does not have AI-generated subtitles**, translation will not work because there is no source text to translate.
+>
+> Most Bilibili videos already have AI-Zh subtitles. If not, make sure the video creator has enabled the AI subtitle feature.
 
 ## ✨ Features
 
 - 🔄 Real-time subtitle translation
+- 🔘 **Toggle On/Off** — enable/disable auto-translation anytime via popup
 - 🌍 Support for 100+ languages
-- 🎯 Zero configuration needed
-- 🎨 Customizable font sizes
+- 🎯 Dual mode: show original + translated subtitles, or translation only
+- 🎨 Adjustable font size (Small / Medium / Large)
 - 🔥 UDP-style reliability (keeps going no matter what)
-- 🎬 Beautiful subtitle styling
+- 🎬 Clean & polished subtitle styling
 - ⚡ Instant fallback to original text if translation fails
-- 🛠 No API keys required
+- 🛠 No API key required
+- ✅ Auto-enables AI-Zh subtitle when video loads
 
 ## 🚀 Installation
 
 1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the extension directory
-5. Visit any Bilibili video and enjoy automatic translations!
+2. Open Chrome, go to `chrome://extensions/`
+3. Enable **Developer mode** in the top right corner
+4. Click **Load unpacked** and select this extension folder
+5. Open any Bilibili video — translations appear automatically!
+
+**For Edge:** Same as Chrome, open `edge://extensions/` and follow the same steps.
+
+> [!TIP]
+> **Not yet available on Extension Stores**
+>
+> Currently BiliSub can only be installed manually (Load Unpacked). Plans to publish to Chrome Web Store & Microsoft Edge Add-ons are in the roadmap.
 
 ## 🎮 Usage
 
-1. Click the extension icon in Chrome
-2. Select your target language
-3. Toggle auto-translation on/off
-4. Adjust font size if needed
-5. That's it! Translations will appear below the original subtitles
+1. Click the **BiliSub** icon in your browser toolbar
+2. Select your **target language** from the dropdown
+3. Use the **Auto-Translation switch** to toggle translation on/off
+4. Choose **Subtitle Mode**: Dual Subtitles (original + translation) or Translation Only
+5. Adjust **Font Size** as needed
+6. Done! Translations appear below the original subtitles in real-time
 
 ## 🌍 Supported Languages
 
 <details>
-<summary>Click to expand language list</summary>
+<summary>Click to expand full list</summary>
 
 - Afrikaans
 - Albanian
@@ -67,8 +94,8 @@
 - Bulgarian
 - Catalan
 - Cebuano
-- Chinese (Simplified)
-- Chinese (Traditional)
+- Chinese (Simplified) / 中文(简体)
+- Chinese (Traditional) / 中文(繁體)
 - Corsican
 - Croatian
 - Czech
@@ -94,15 +121,15 @@
 - Hungarian
 - Icelandic
 - Igbo
-- Indonesian
+- Indonesian / Bahasa Indonesia
 - Irish
 - Italian
-- Japanese
-- Javanese
+- Japanese / 日本語
+- Javanese / Basa Jawa
 - Kannada
 - Kazakh
 - Khmer
-- Korean
+- Korean / 한국어
 - Kurdish
 - Kyrgyz
 - Lao
@@ -141,19 +168,19 @@
 - Slovenian
 - Somali
 - Spanish
-- Sundanese
+- Sundanese / Basa Sunda
 - Swahili
 - Swedish
 - Tagalog (Filipino)
 - Tajik
 - Tamil
 - Telugu
-- Thai
+- Thai / ภาษาไทย
 - Turkish
 - Ukrainian
 - Urdu
 - Uzbek
-- Vietnamese
+- Vietnamese / Tiếng Việt
 - Welsh
 - Xhosa
 - Yiddish
@@ -164,45 +191,53 @@
 
 ## 🛠 Technical Details
 
-The extension uses a unique "UDP-style" translation approach:
+The extension uses a "UDP-style" translation approach:
 
 ```mermaid
 graph TD
-    A[Original Subtitle] --> B{Primary Translation}
-    B -->|Success| C[Show Translation]
-    B -->|Fail| D{Backup Translation}
-    D -->|Success| C
-    D -->|Fail| E[Show Original]
+    A[Bilibili Video] --> B{Detect AI-Zh Subtitle}
+    B -->|Found| C[Fetch Source Text]
+    B -->|Not Found| D[Show Warning]
+    C --> E{Google Translate}
+    E -->|Success| F[Show Dual Subtitles]
+    E -->|Fail| G[Fallback to Original Text]
 ```
 
-- Primary translation service with instant fallback
-- No blocking or waiting for retries
-- Graceful degradation to original text
-- Optimized for real-world network conditions
+**How it works:**
+1. The extension injects an interceptor into the Bilibili page to capture subtitle data
+2. It automatically finds and enables the **ai-zh** (AI-Generated Chinese) subtitle track
+3. Each subtitle line is translated via Google Translate API in real-time
+4. Translation results appear below the original subtitle (dual subtitle mode)
+5. If translation fails, the original text is still shown (graceful degradation)
+
+## 🔮 What's Next
+
+> [!TIP]
+> Future development plans for **BiliSub**:
+
+- **OCR Translation** — Main feature being worked on. Enables subtitle translation for videos that **don't have AI-generated subtitles**, by capturing text that appears on screen (hardsub / embedded subtitle) via OCR then translating it in real-time.
+- Publishing to **Chrome Web Store** & **Microsoft Edge Add-ons** for easier installation
+- Support for **multiple translation engines** (DeepL, LibreTranslate, in addition to Google Translate)
+- **Export subtitles** to .srt / .ass format
+
+---
 
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to:
 
-1. Fork the repository
+1. Fork this repository
 2. Create a feature branch
 3. Submit a pull request
 
 ## 📝 License
 
-MIT License - feel free to use this in your own projects!
-
-## 🌟 Credits
-
-Built with love for the Bilibili community! Special thanks to:
-- Google Translate for the translation service
-- Bilibili for the amazing video platform
-- The open-source community
+MIT License — free to use in your own projects!
 
 ---
 
 <div align="center">
-Made with ❤️ by the community
+Made with ❤️ for the Bilibili community
 <br>
-🌟 Star us on GitHub if you find this useful!
-</div> 
+🌟 Star us if you find this useful!
+</div>

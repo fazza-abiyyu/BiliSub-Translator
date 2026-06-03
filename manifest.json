@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "BiliSub Translator",
+  "name": "BiliSub",
   "version": "1.0",
   "description": "Add multi-language subtitles to Bilibili videos using Google Translate",
   "permissions": [

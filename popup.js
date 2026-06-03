@@ -17,10 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save settings when changed
   document.getElementById('targetLang').addEventListener('change', saveSettings);
-  document.getElementById('autoTranslate').addEventListener('change', saveSettings);
+  document.getElementById('autoTranslate').addEventListener('change', onToggleChange);
   document.getElementById('fontSize').addEventListener('change', saveSettings);
   document.getElementById('subtitleMode').addEventListener('change', saveSettings);
 });
+
+function onToggleChange() {
+  saveSettings();
+}
 
 function saveSettings() {
   const settings = {
@@ -44,4 +48,4 @@ function saveSettings() {
       }
     });
   });
-} 
+}
