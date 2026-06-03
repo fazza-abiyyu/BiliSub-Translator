@@ -21,6 +21,14 @@
 
 ---
 
+## 📷 Preview
+
+| Popup Settings | Dual Subtitles in Action |
+|:---:|:---:|
+| ![Popup Settings](./asset/popup-setting.png) | ![Dual Subtitles](./asset/dual-subtitle.png) |
+
+---
+
 > [!NOTE]
 > 🤝 **Project Origins**
 >

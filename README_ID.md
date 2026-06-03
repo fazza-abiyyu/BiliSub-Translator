@@ -21,6 +21,14 @@
 
 ---
 
+## 📷 Preview
+
+| Pengaturan Popup | Subtitle Ganda di Video |
+|:---:|:---:|
+| ![Pengaturan Popup](./asset/popup-setting.png) | ![Subtitle Ganda](./asset/dual-subtitle.png) |
+
+---
+
 > [!NOTE]
 > 🤝 **Asal Usul Projek**
 >
