@@ -975,7 +975,7 @@ function updateSubtitleStyles() {
 
   style = document.createElement('style');
   style.setAttribute('data-subtitle-styles', '');
-  document.head.appendChild(style);
+  (document.head || document.documentElement).appendChild(style);
 
   let fontSizePx = 'clamp(11px, 2.8cqw, 24px)';
   if (settings.fontSize === 'small') {
