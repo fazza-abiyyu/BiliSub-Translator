@@ -376,81 +376,19 @@ async function translateSubtitleTrack(subtitles) {
   return translatedList;
 }
 
-// Multi-Fallback Translation Engine
+// Multi-Fallback Translation Engine (Routed through background worker to bypass CORS/CSP)
 async function translateText(text, targetLang) {
-  // 1. Try Google Translate (Primary)
   try {
-    const sourceLang = /[\u4e00-\u9fa5]/.test(text) ? 'zh' : 'auto';
-    const resp = await fetch(
-      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`,
-      { cache: 'no-store' }
-    );
-    if (resp.ok) {
-      const data = await resp.json();
-      const result = data?.[0]?.map(x => x[0]).join('');
-      if (result && !result.includes('302 Moved') && !result.includes('sorry/index')) {
-        return result;
-      }
-    }
-  } catch (e) {
-    console.error('Google Translate primary failed, trying fallbacks...', e);
+    const response = await chrome.runtime.sendMessage({
+      type: 'translateText',
+      text: text,
+      targetLang: targetLang
+    });
+    return response?.translation || null;
+  } catch (err) {
+    console.error('Translation message error:', err);
+    return null;
   }
-
-  // 2. Try Lingva Translate API (Backup 1)
-  try {
-    const sourceLang = /[\u4e00-\u9fa5]/.test(text) ? 'zh' : 'auto';
-    const resp = await fetch(
-      `https://lingva.ml/api/v1/${sourceLang}/${targetLang}/${encodeURIComponent(text)}`,
-      { cache: 'no-store' }
-    );
-    if (resp.ok) {
-      const data = await resp.json();
-      const result = data?.translation;
-      if (result) {
-        return result;
-      }
-    }
-  } catch (e) {
-    console.error('Lingva backup failed...', e);
-  }
-
-  // 3. Try MyMemory Translation API (Backup 2)
-  try {
-    const sourceLang = /[\u4e00-\u9fa5]/.test(text) ? 'zh' : 'auto';
-    const resp = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`,
-      { cache: 'no-store' }
-    );
-    if (resp.ok) {
-      const data = await resp.json();
-      const result = data?.responseData?.translatedText;
-      if (result) {
-        return result;
-      }
-    }
-  } catch (e) {
-    console.error('MyMemory backup failed...', e);
-  }
-
-  // 4. Try Google Translate Mobile API (Backup 3)
-  try {
-    const sourceLang = /[\u4e00-\u9fa5]/.test(text) ? 'zh' : 'auto';
-    const resp = await fetch(
-      `https://translate.google.com/translate_a/single?client=at&sl=${sourceLang}&tl=${targetLang}&q=${encodeURIComponent(text)}`,
-      { cache: 'no-store' }
-    );
-    if (resp.ok) {
-      const data = await resp.json();
-      const result = data?.sentences?.[0]?.trans || (Array.isArray(data) ? data[0] : null);
-      if (result && !result.includes('302 Moved')) {
-        return result;
-      }
-    }
-  } catch (e) {
-    console.error('Google Translate mobile backup failed...', e);
-  }
-
-  return null;
 }
 
 // Background Translation Loop (For Pre-translating timeline fallback)
