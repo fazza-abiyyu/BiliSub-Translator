@@ -12,7 +12,10 @@
     "*://*.bilibili.com/*",
     "*://*.youtube.com/*",
     "*://*.hdslb.com/*",
-    "https://translate.googleapis.com/*"
+    "*://translate.googleapis.com/*",
+    "*://translate.google.com/*",
+    "*://lingva.ml/*",
+    "*://api.mymemory.translated.net/*"
   ],
   "background": {
     "service_worker": "background.js"
