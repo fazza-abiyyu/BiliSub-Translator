@@ -48,6 +48,8 @@ function makeElementDraggable(el) {
 
   let posX = 0, posY = 0, mouseX = 0, mouseY = 0;
   let isDragging = false;
+  let currentLeft = 0;
+  let currentTop = 0;
 
   el.style.setProperty('cursor', 'grab', 'important');
   el.style.setProperty('user-select', 'none', 'important');
@@ -87,6 +89,12 @@ function makeElementDraggable(el) {
     mouseX = e.clientX;
     mouseY = e.clientY;
 
+    const rect = el.getBoundingClientRect();
+    const parent = el.offsetParent || document.body;
+    const parentRect = parent.getBoundingClientRect();
+    currentLeft = rect.left - parentRect.left;
+    currentTop = rect.top - parentRect.top;
+
     document.addEventListener('mousemove', elementDrag);
     document.addEventListener('mouseup', closeDragElement);
   }
@@ -100,22 +108,26 @@ function makeElementDraggable(el) {
     mouseX = e.clientX;
     mouseY = e.clientY;
 
+    currentLeft += deltaX;
+    currentTop += deltaY;
+
     const rect = el.getBoundingClientRect();
     const parent = el.offsetParent || document.body;
     const parentRect = parent.getBoundingClientRect();
     
-    let leftVal = rect.left - parentRect.left + deltaX;
-    let topVal = rect.top - parentRect.top + deltaY;
-
     // Convert to percentage of parent dimensions
     const parentWidth = parentRect.width || 1;
     const parentHeight = parentRect.height || 1;
-    let leftPercent = (leftVal / parentWidth) * 100;
-    let topPercent = (topVal / parentHeight) * 100;
+    let leftPercent = (currentLeft / parentWidth) * 100;
+    let topPercent = (currentTop / parentHeight) * 100;
 
     // Constrain inside bounds so it doesn't get dragged off-screen
     leftPercent = Math.max(0, Math.min(100 - (rect.width / parentWidth) * 100, leftPercent));
     topPercent = Math.max(0, Math.min(100 - (rect.height / parentHeight) * 100, topPercent));
+
+    // Update currentLeft/currentTop in case they got constrained
+    currentLeft = (leftPercent / 100) * parentWidth;
+    currentTop = (topPercent / 100) * parentHeight;
 
     globalDraggedOffset = { left: leftPercent, top: topPercent, isPercent: true };
     applyDraggedPosition(el);
