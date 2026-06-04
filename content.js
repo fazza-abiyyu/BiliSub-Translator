@@ -35,7 +35,7 @@ function checkUrlChange() {
   }
 }
 
-let globalDraggedOffset = null; // Stores { left, top } relative to offsetParent
+let globalDraggedOffset = null; // Stores { left, top, isPercent } relative to offsetParent
 
 function makeElementDraggable(el) {
   if (!el || el.dataset.draggableInitialized) {
@@ -57,6 +57,23 @@ function makeElementDraggable(el) {
   }
 
   el.addEventListener('mousedown', dragMouseDown);
+
+  // Reset position to default on double-click
+  el.addEventListener('dblclick', () => {
+    globalDraggedOffset = null;
+    el.removeAttribute('data-has-been-manual-dragged');
+    el.style.removeProperty('position');
+    el.style.removeProperty('left');
+    el.style.removeProperty('top');
+    el.style.removeProperty('bottom');
+    el.style.removeProperty('right');
+    el.style.removeProperty('transform');
+    chrome.storage.sync.set({
+      draggedLeftPercent: null,
+      draggedTopPercent: null,
+      hasBeenManualDragged: false
+    });
+  });
 
   function dragMouseDown(e) {
     if (e.button !== 0) return; // Left click only
@@ -84,12 +101,23 @@ function makeElementDraggable(el) {
     mouseY = e.clientY;
 
     const rect = el.getBoundingClientRect();
-    const parentRect = el.offsetParent ? el.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+    const parent = el.offsetParent || document.body;
+    const parentRect = parent.getBoundingClientRect();
     
     let leftVal = rect.left - parentRect.left + deltaX;
     let topVal = rect.top - parentRect.top + deltaY;
 
-    globalDraggedOffset = { left: leftVal, top: topVal };
+    // Convert to percentage of parent dimensions
+    const parentWidth = parentRect.width || 1;
+    const parentHeight = parentRect.height || 1;
+    let leftPercent = (leftVal / parentWidth) * 100;
+    let topPercent = (topVal / parentHeight) * 100;
+
+    // Constrain inside bounds so it doesn't get dragged off-screen
+    leftPercent = Math.max(0, Math.min(100 - (rect.width / parentWidth) * 100, leftPercent));
+    topPercent = Math.max(0, Math.min(100 - (rect.height / parentHeight) * 100, topPercent));
+
+    globalDraggedOffset = { left: leftPercent, top: topPercent, isPercent: true };
     applyDraggedPosition(el);
   }
 
@@ -101,13 +129,27 @@ function makeElementDraggable(el) {
     
     // Simpan status bahwa elemen ini sudah pernah di-drag secara manual
     el.dataset.hasBeenManualDragged = 'true';
+
+    // Simpan posisi ke storage secara persistent
+    if (globalDraggedOffset) {
+      chrome.storage.sync.set({
+        draggedLeftPercent: globalDraggedOffset.left,
+        draggedTopPercent: globalDraggedOffset.top,
+        hasBeenManualDragged: true
+      });
+    }
   }
 
   function applyDraggedPosition(target) {
     if (!globalDraggedOffset) return;
     target.style.setProperty('position', 'absolute', 'important');
-    target.style.setProperty('left', globalDraggedOffset.left + 'px', 'important');
-    target.style.setProperty('top', globalDraggedOffset.top + 'px', 'important');
+    if (globalDraggedOffset.isPercent) {
+      target.style.setProperty('left', globalDraggedOffset.left + '%', 'important');
+      target.style.setProperty('top', globalDraggedOffset.top + '%', 'important');
+    } else {
+      target.style.setProperty('left', globalDraggedOffset.left + 'px', 'important');
+      target.style.setProperty('top', globalDraggedOffset.top + 'px', 'important');
+    }
     target.style.setProperty('bottom', 'auto', 'important');
     target.style.setProperty('right', 'auto', 'important');
     target.style.setProperty('transform', 'none', 'important');
@@ -207,12 +249,22 @@ chrome.storage.sync.get(
   {
     targetLang: 'id',
     autoTranslate: true,
-    fontSize: '16',
+    fontSize: 'medium',
     subtitleMode: 'dual',
-    bgOpacity: '60'
+    bgOpacity: '60',
+    draggedLeftPercent: null,
+    draggedTopPercent: null,
+    hasBeenManualDragged: false
   },
   (items) => {
     settings = items;
+    if (items.hasBeenManualDragged && items.draggedLeftPercent !== null && items.draggedTopPercent !== null) {
+      globalDraggedOffset = {
+        left: items.draggedLeftPercent,
+        top: items.draggedTopPercent,
+        isPercent: true
+      };
+    }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initialize);
     } else {
@@ -779,7 +831,7 @@ function setupYouTubeObserver() {
 async function handleYouTubeSubtitleUpdate(captionContainer) {
   if (!settings.autoTranslate) return;
 
-  const captionWindow = captionContainer.querySelector('.caption-window');
+  const captionWindow = captionContainer.querySelector('.caption-window, .ytp-caption-window-rollup, .ytp-caption-window');
   if (captionWindow) {
     makeElementDraggable(captionWindow);
   }
@@ -849,7 +901,7 @@ function applyYouTubeSubtitleMode() {
     }
   });
 
-  const captionWindow = document.querySelector('.ytp-caption-window-container .caption-window');
+  const captionWindow = document.querySelector('.ytp-caption-window-container .caption-window, .ytp-caption-window-container .ytp-caption-window-rollup, .ytp-caption-window-container .ytp-caption-window');
   if (captionWindow) {
     makeElementDraggable(captionWindow);
   }
@@ -913,12 +965,20 @@ function updateSubtitleStyles() {
   style.setAttribute('data-subtitle-styles', '');
   document.head.appendChild(style);
 
-  let fontSizePx = '16px';
-  if (settings.fontSize === 'small') fontSizePx = '12px';
-  else if (settings.fontSize === 'medium') fontSizePx = '18px';
-  else if (settings.fontSize === 'large') fontSizePx = '22px';
-  else if (settings.fontSize) {
-    fontSizePx = settings.fontSize + 'px';
+  let fontSizePx = 'clamp(11px, 2.8cqw, 24px)';
+  if (settings.fontSize === 'small') {
+    fontSizePx = 'clamp(9px, 2.2cqw, 16px)';
+  } else if (settings.fontSize === 'medium') {
+    fontSizePx = 'clamp(11px, 2.8cqw, 24px)';
+  } else if (settings.fontSize === 'large') {
+    fontSizePx = 'clamp(14px, 3.8cqw, 36px)';
+  } else if (settings.fontSize) {
+    // Fallback if settings.fontSize is numeric
+    const fs = parseFloat(settings.fontSize) || 16;
+    const minFs = Math.max(9, Math.round(fs * 0.7));
+    const maxFs = Math.round(fs * 1.5);
+    const cqwVal = (fs / 640) * 100; // base on 640px player width
+    fontSizePx = `clamp(${minFs}px, ${cqwVal}cqw, ${maxFs}px)`;
   }
 
   let opacity = '0.6';
@@ -927,6 +987,15 @@ function updateSubtitleStyles() {
   }
 
   style.textContent = `
+    /* Definisi Container Query untuk scaling font secara responsif */
+    .bpx-player-container, 
+    .bili-video-player, 
+    #movie_player, 
+    .ytp-caption-window-container {
+      container-type: inline-size !important;
+      container-name: video-player !important;
+    }
+
     /* PERBAIKAN: Hanya paksa overflow agar tidak terpotong, kembalikan posisi ke aslinya */
     html body .bpx-player-video-area label,
     html body .bpx-player-video-wrap {
@@ -949,6 +1018,34 @@ function updateSubtitleStyles() {
     .bpx-player-primary-area, .bili-video-player {
       position: relative !important;
       overflow: hidden !important; 
+    }
+
+    /* Pastikan subtitle tetap terlihat di mode mini-player (小窗模式) Bilibili */
+    .bpx-player-container[data-screen="mini"] .bili-subtitle-x-subtitle-panel {
+      display: block !important;
+      visibility: visible !important;
+    }
+
+    /* Geser posisi default ke atas sedikit agar tidak menutupi control bar */
+    .bpx-player-container:hover .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]),
+    .bili-video-player:hover .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]) {
+      transform: translateY(-100px) !important;
+    }
+    /* Saat kontrol bar tersembunyi (tidak hover), geser lebih tinggi agar tetap berada di posisi yang nyaman */
+    .bpx-player-container:not(:hover) .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]),
+    .bili-video-player:not(:hover) .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]) {
+      transform: translateY(-135px) !important;
+    }
+
+    #movie_player:hover .caption-window:not([data-has-been-manual-dragged="true"]),
+    #movie_player:hover .ytp-caption-window-rollup:not([data-has-been-manual-dragged="true"]),
+    #movie_player:hover .ytp-caption-window:not([data-has-been-manual-dragged="true"]) {
+      transform: translateY(-40px) !important;
+    }
+    #movie_player:not(:hover) .caption-window:not([data-has-been-manual-dragged="true"]),
+    #movie_player:not(:hover) .ytp-caption-window-rollup:not([data-has-been-manual-dragged="true"]),
+    #movie_player:not(:hover) .ytp-caption-window:not([data-has-been-manual-dragged="true"]) {
+      transform: translateY(-75px) !important;
     }
 
     /* MATIKAN paksaan bottom persentase yang bikin dia naik ke atas */

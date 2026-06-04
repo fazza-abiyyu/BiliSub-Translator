@@ -10,6 +10,7 @@
   ],
   "host_permissions": [
     "*://*.bilibili.com/*",
+    "*://*.youtube.com/*",
     "*://*.hdslb.com/*",
     "https://translate.googleapis.com/*"
   ],

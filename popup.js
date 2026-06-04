@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     (items) => {
       document.getElementById('targetLang').value = items.targetLang;
       document.getElementById('autoTranslate').checked = items.autoTranslate;
-      document.getElementById('fontSize').value = items.fontSize;
+      const validSizes = ['small', 'medium', 'large'];
+      document.getElementById('fontSize').value = validSizes.includes(items.fontSize) ? items.fontSize : 'medium';
       document.getElementById('subtitleMode').value = items.subtitleMode;
     }
   );
