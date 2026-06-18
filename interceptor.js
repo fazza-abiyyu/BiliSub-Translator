@@ -1,50 +1,49 @@
 (function() {
-  // Intercept Fetch API
+  const SUBTITLE_URL_PATTERNS = [
+    '/bfs/subtitle/',
+    '/bfs/ai_subtitle/',
+    'aisubtitle.hdslb.com/bfs/'
+  ];
+
+  function isSubtitleUrl(url) {
+    if (typeof url !== 'string') return false;
+    return SUBTITLE_URL_PATTERNS.some(p => url.includes(p));
+  }
+
+  // Intercept Fetch API — fire-and-forget: pass data to content.js but
+  // return the original response immediately so Bilibili's player isn't delayed.
   const originalFetch = window.fetch;
   window.fetch = async function(...args) {
-    const url = args[0];
-    const isSubUrl = typeof url === 'string' && (url.includes('subtitle') || url.includes('hdslb.com') || url.includes('bilivideo.com'));
-    if (isSubUrl) {
-      try {
-        const response = await originalFetch.apply(this, args);
-        const data = await response.clone().json();
-        if (data && data.body) {
-          const translatedBody = await new Promise((resolve) => {
-            const reqId = Math.random().toString(36).slice(2);
-            const handler = (event) => {
-              if (event.data && event.data.type === 'BILIBILI_SUBTITLES_TRANSLATED' && event.data.reqId === reqId) {
-                window.removeEventListener('message', handler);
-                resolve(event.data.subtitles);
-              }
-            };
-            window.addEventListener('message', handler);
-            window.postMessage({ type: 'TRANSLATE_BILIBILI_SUBTITLES', reqId: reqId, body: data.body }, '*');
-            
-            // Safety timeout of 4 seconds
-            setTimeout(() => {
-              window.removeEventListener('message', handler);
-              resolve(null);
-            }, 4000);
-          });
-          
-          if (translatedBody) {
-            data.body = translatedBody;
-            return new Response(JSON.stringify(data), {
-              status: response.status,
-              statusText: response.statusText,
-              headers: response.headers
-            });
-          }
-        }
-        return response;
-      } catch (e) {
-        return originalFetch.apply(this, args);
-      }
+    if (!isSubtitleUrl(args[0])) {
+      return originalFetch.apply(this, args);
     }
-    return originalFetch.apply(this, args);
+
+    let response;
+    try {
+      response = await originalFetch.apply(this, args);
+      // Clone the response for content.js to translate in background;
+      // the original response is returned immediately to Bilibili's player.
+      response.clone().json().then(data => {
+        if (data && data.body && Array.isArray(data.body)) {
+          const reqId = Math.random().toString(36).slice(2);
+          const handler = (event) => {
+            if (event.data && event.data.type === 'BILIBILI_SUBTITLES_TRANSLATED' && event.data.reqId === reqId) {
+              window.removeEventListener('message', handler);
+            }
+          };
+          window.addEventListener('message', handler);
+          window.postMessage({ type: 'TRANSLATE_BILIBILI_SUBTITLES', reqId: reqId, body: data.body }, '*');
+          setTimeout(() => window.removeEventListener('message', handler), 30000);
+        }
+      }).catch(() => {});
+      return response;
+    } catch (e) {
+      if (response) return response;
+      return originalFetch.apply(this, args);
+    }
   };
 
-  // Intercept XMLHttpRequests
+  // Intercept XMLHttpRequests — same fire-and-forget pattern
   const originalXHR = window.XMLHttpRequest.prototype.open;
   const originalSend = window.XMLHttpRequest.prototype.send;
 
@@ -55,53 +54,27 @@
 
   window.XMLHttpRequest.prototype.send = function() {
     const url = this._url;
-    const isSubUrl = typeof url === 'string' && (url.includes('subtitle') || url.includes('hdslb.com') || url.includes('bilivideo.com'));
-    
-    if (isSubUrl) {
-      const self = this;
-      const originalOnReadyStateChange = this.onreadystatechange;
-
-      this.onreadystatechange = function() {
-        if (self.readyState === 4 && self.status === 200) {
-          try {
-            const data = JSON.parse(self.responseText);
-            if (data && data.body) {
-              const reqId = Math.random().toString(36).slice(2);
-              const handler = (event) => {
-                if (event.data && event.data.type === 'BILIBILI_SUBTITLES_TRANSLATED' && event.data.reqId === reqId) {
-                  window.removeEventListener('message', handler);
-                  const translatedBody = event.data.subtitles;
-                  if (translatedBody) {
-                    data.body = translatedBody;
-                    const modifiedText = JSON.stringify(data);
-                    
-                    Object.defineProperty(self, 'responseText', { value: modifiedText, writable: true });
-                    Object.defineProperty(self, 'response', { value: modifiedText, writable: true });
-                  }
-                  if (originalOnReadyStateChange) {
-                    originalOnReadyStateChange.apply(self, arguments);
-                  }
-                }
-              };
-              window.addEventListener('message', handler);
-              window.postMessage({ type: 'TRANSLATE_BILIBILI_SUBTITLES', reqId: reqId, body: data.body }, '*');
-              
-              setTimeout(() => {
-                window.removeEventListener('message', handler);
-                if (originalOnReadyStateChange) {
-                  originalOnReadyStateChange.apply(self, arguments);
-                }
-              }, 4000);
-              
-              return;
-            }
-          } catch (e) {}
-        }
-        if (originalOnReadyStateChange) {
-          originalOnReadyStateChange.apply(self, arguments);
-        }
-      };
+    if (!isSubtitleUrl(url)) {
+      return originalSend.apply(this, arguments);
     }
+
+    const self = this;
+    const originalOnReadyStateChange = this.onreadystatechange;
+
+    this.onreadystatechange = function() {
+      if (self.readyState === 4 && self.status === 200) {
+        try {
+          const data = JSON.parse(self.responseText);
+          if (data && data.body && Array.isArray(data.body)) {
+            const reqId = Math.random().toString(36).slice(2);
+            window.postMessage({ type: 'TRANSLATE_BILIBILI_SUBTITLES', reqId: reqId, body: data.body }, '*');
+          }
+        } catch (e) {}
+      }
+      if (originalOnReadyStateChange) {
+        originalOnReadyStateChange.apply(self, arguments);
+      }
+    };
     return originalSend.apply(this, arguments);
   };
 })();

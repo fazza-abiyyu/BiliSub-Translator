@@ -24,6 +24,16 @@ let videoElement = null;
 let isTranslationLoopRunning = false;
 let hasAutoEnabledSubtitles = false;
 let lastUrl = window.location.href;
+let extensionContextValid = true;
+
+function checkExtensionContext() {
+  try {
+    return !!chrome.runtime.id;
+  } catch (_) {
+    extensionContextValid = false;
+    return false;
+  }
+}
 
 function checkUrlChange() {
   if (window.location.href !== lastUrl) {
@@ -199,61 +209,51 @@ function autoEnableBilibiliSubtitles() {
   isAutoEnabling = true;
   console.log('[BiliSub] Attempting to auto-enable subtitles...');
 
-  // Mouse enter to trigger dropdown population
-  subtitleBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+  // Use click() which creates trusted events browser-side
+  subtitleBtn.click();
 
+  // Step 1: wait for player to respond (menu open or toggle)
   setTimeout(() => {
     const subtitleItems = document.querySelectorAll('.bpx-player-ctrl-subtitle-language-item');
-    if (subtitleItems.length === 0) {
-      subtitleBtn.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-      isAutoEnabling = false;
+    
+    if (subtitleItems.length > 0) {
+      // Menu opened — pick a Chinese track
+      let targetItem = document.querySelector('.bpx-player-ctrl-subtitle-language-item[data-lan="ai-zh"]');
+      if (!targetItem) {
+        targetItem = Array.from(subtitleItems).find(item => {
+          const lan = (item.getAttribute('data-lan') || '').toLowerCase();
+          const text = (item.textContent || '').toLowerCase();
+          return lan.includes('zh') || lan.includes('chi') || text.includes('中文') || text.includes('汉语');
+        });
+      }
+      if (!targetItem) {
+        targetItem = Array.from(subtitleItems).find(item => {
+          const lan = (item.getAttribute('data-lan') || '').toLowerCase();
+          const text = (item.textContent || '').toLowerCase();
+          return lan && lan !== 'off' && lan !== 'none' && !text.includes('关闭') && !text.includes('off');
+        });
+      }
+      if (targetItem) {
+        targetItem.click();
+        hasAutoEnabledSubtitles = true;
+        console.log('[BiliSub] Selected subtitle track:', targetItem.getAttribute('data-lan'));
+      }
+    } else {
+      // No menu items — button might have toggled subtitles directly
+      // Check if subtitles are now showing
+      setTimeout(() => {
+        const textEl = document.querySelector('.bili-subtitle-x-subtitle-panel-text');
+        if (textEl && textEl.textContent?.trim()) {
+          hasAutoEnabledSubtitles = true;
+          console.log('[BiliSub] Subtitles toggled on via button click');
+        }
+        isAutoEnabling = false;
+      }, 600);
       return;
     }
 
-    let targetItem = document.querySelector('.bpx-player-ctrl-subtitle-language-item[data-lan="ai-zh"]');
-    
-    if (!targetItem) {
-      targetItem = Array.from(subtitleItems).find(item => {
-        const lan = (item.getAttribute('data-lan') || '').toLowerCase();
-        const text = (item.textContent || '').toLowerCase();
-        return lan.includes('zh') || lan.includes('chi') || text.includes('中文') || text.includes('汉语');
-      });
-    }
-
-    if (!targetItem) {
-      targetItem = Array.from(subtitleItems).find(item => {
-        const lan = (item.getAttribute('data-lan') || '').toLowerCase();
-        const text = (item.textContent || '').toLowerCase();
-        return lan && lan !== 'off' && lan !== 'none' && !text.includes('关闭') && !text.includes('off');
-      });
-    }
-
-    if (targetItem) {
-      const isAlreadyActive = targetItem.classList.contains('bpx-state-active') || 
-                              targetItem.classList.contains('active');
-      
-      if (isAlreadyActive) {
-        console.log('[BiliSub] Target track is already active:', targetItem.getAttribute('data-lan'));
-        hasAutoEnabledSubtitles = true;
-      } else {
-        console.log('[BiliSub] Selecting subtitle track:', targetItem.getAttribute('data-lan'));
-        targetItem.click();
-        hasAutoEnabledSubtitles = true;
-      }
-    } else {
-      const isInactive = !subtitleBtn.classList.contains('bpx-state-active') && 
-                         !subtitleBtn.classList.contains('active') && 
-                         subtitleBtn.getAttribute('aria-pressed') !== 'true';
-      if (isInactive) {
-        console.log('[BiliSub] No tracks found, clicking main subtitle button');
-        subtitleBtn.click();
-        hasAutoEnabledSubtitles = true;
-      }
-    }
-
-    subtitleBtn.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
     isAutoEnabling = false;
-  }, 250);
+  }, 600);
 }
 
 // Load settings
@@ -322,16 +322,25 @@ async function translateSubtitleTrack(subtitles) {
     return subtitles;
   }
 
-  console.log('[BiliSub] Network batch translating entire track of size:', subtitles.length);
+  console.log('[BiliSub] Network batch translating track of size:', subtitles.length);
 
   const translatedList = JSON.parse(JSON.stringify(subtitles));
-  const batchSize = 10;
   
-  const translateBatch = async (startIndex) => {
-    const batch = subtitles.slice(startIndex, startIndex + batchSize);
-    const promises = batch.map(async (sub, index) => {
+  // We only translate the first 150 subtitles to stay within the 4-second network timeout.
+  // The rest will be translated on-the-fly and pre-translated by startTranslationLoop.
+  const limit = Math.min(subtitles.length, 150);
+  const concurrency = 8;
+  let currentIndex = 0;
+  
+  const worker = async (maxIndex) => {
+    while (true) {
+      if (!extensionContextValid) break;
+      const idx = currentIndex++;
+      if (idx >= maxIndex) break;
+
+      const sub = subtitles[idx];
       let originalText = sub.content?.trim();
-      if (!originalText) return;
+      if (!originalText) continue;
 
       originalText = originalText.replace(/\|/g, '');
 
@@ -340,44 +349,78 @@ async function translateSubtitleTrack(subtitles) {
         const finalContent = settings.subtitleMode === 'translationOnly' 
           ? transText 
           : `${originalText}\n${transText}`;
-        translatedList[startIndex + index].content = finalContent;
-        return;
+        translatedList[idx].content = finalContent;
+        continue;
       }
 
       try {
+        if (!checkExtensionContext()) break;
         const response = await chrome.runtime.sendMessage({
           type: 'translateText',
           text: originalText,
           targetLang: settings.targetLang
         });
-        if (response && response.translation) {
+        if (response && response.translation && response.translation !== originalText) {
           const transText = response.translation;
           translationCache.set(originalText, transText);
           
           const finalContent = settings.subtitleMode === 'translationOnly' 
             ? transText 
             : `${originalText}\n${transText}`;
-          translatedList[startIndex + index].content = finalContent;
+          translatedList[idx].content = finalContent;
         }
       } catch (err) {
-        console.error('Batch translation error:', err);
+        if (err.message?.includes('Extension context invalidated')) {
+          extensionContextValid = false;
+          console.error('[BiliSub] Extension context invalidated. Stopping batch translation.');
+          break;
+        }
+        console.error('Batch translation error at index:', idx, err);
       }
-    });
-    await Promise.all(promises);
+    }
   };
 
-  const batchPromises = [];
-  for (let i = 0; i < subtitles.length; i += batchSize) {
-    batchPromises.push(translateBatch(i));
+  const workers = [];
+  for (let i = 0; i < Math.min(concurrency, limit); i++) {
+    workers.push(worker(limit));
   }
-  await Promise.all(batchPromises);
+  await Promise.all(workers);
 
-  console.log('[BiliSub] Network batch translation completed!');
+  // Background translation for the remaining subtitles in chunks of 150
+  if (subtitles.length > 150) {
+    (async () => {
+      let chunkStart = 150;
+      const chunkSize = 150;
+      while (chunkStart < subtitles.length && extensionContextValid) {
+        const chunkEnd = Math.min(subtitles.length, chunkStart + chunkSize);
+        console.log(`[BiliSub] Background translating next chunk: ${chunkStart} to ${chunkEnd}`);
+        currentIndex = chunkStart;
+        
+        const bgWorkers = [];
+        for (let i = 0; i < Math.min(concurrency, chunkEnd - chunkStart); i++) {
+          bgWorkers.push(worker(chunkEnd));
+        }
+        await Promise.all(bgWorkers);
+        
+        chunkStart += chunkSize;
+        // 800ms delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+      if (extensionContextValid) {
+        console.log('[BiliSub] Background translation of the entire track completed!');
+      } else {
+        console.log('[BiliSub] Background translation stopped due to invalidated extension context.');
+      }
+    })();
+  }
+
+  console.log('[BiliSub] Network batch translation completed for first', limit, 'items!');
   return translatedList;
 }
 
 // Multi-Fallback Translation Engine (Routed through background worker to bypass CORS/CSP)
 async function translateText(text, targetLang) {
+  if (!extensionContextValid) return null;
   try {
     const response = await chrome.runtime.sendMessage({
       type: 'translateText',
@@ -386,7 +429,12 @@ async function translateText(text, targetLang) {
     });
     return response?.translation || null;
   } catch (err) {
-    console.error('Translation message error:', err);
+    if (err.message?.includes('Extension context invalidated')) {
+      extensionContextValid = false;
+      console.error('[BiliSub] Extension context invalidated. Translation stopped.');
+    } else {
+      console.error('Translation message error:', err);
+    }
     return null;
   }
 }
@@ -396,7 +444,7 @@ async function startTranslationLoop() {
   if (isTranslationLoopRunning) return;
   isTranslationLoopRunning = true;
 
-  while (true) {
+  while (extensionContextValid) {
     if (!settings.autoTranslate || !allSubtitles.length) {
       await new Promise(r => setTimeout(r, 1000));
       continue;
@@ -466,7 +514,8 @@ function getCleanOriginalText(el) {
   const clone = el.cloneNode(true);
   const customGrp = clone.querySelector('.custom-bili-subtitle-group');
   if (customGrp) customGrp.remove();
-  return clone.textContent || '';
+  // Gunakan innerText untuk mendeteksi line break (<br>) bawaan Bilibili
+  return clone.innerText || clone.textContent || '';
 }
 
 // Initializer
@@ -964,10 +1013,10 @@ function updateSubtitleStyles() {
       pointer-events: none !important;
     }
 
-    /* Pastikan elemen player utama tetap membatasi konten agar tidak tembus ke luar video saat di-drag */
+    /* Pastikan subtitle tidak terpotong oleh parent container */
     .bpx-player-primary-area, .bili-video-player {
       position: relative !important;
-      overflow: hidden !important; 
+      overflow: visible !important; 
     }
 
     /* Pastikan subtitle tetap terlihat di mode mini-player (小窗模式) Bilibili */
@@ -976,15 +1025,15 @@ function updateSubtitleStyles() {
       visibility: visible !important;
     }
 
-    /* Geser posisi default ke atas sedikit agar tidak menutupi control bar */
+    /* Geser posisi default sedikit ke atas agar tidak menutupi control bar */
     .bpx-player-container:hover .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]),
     .bili-video-player:hover .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]) {
-      transform: translateY(-100px) !important;
+      transform: translateY(-40px) !important;
     }
-    /* Saat kontrol bar tersembunyi (tidak hover), geser lebih tinggi agar tetap berada di posisi yang nyaman */
+    /* Saat kontrol bar tersembunyi (tidak hover), geser sedikit lebih tinggi */
     .bpx-player-container:not(:hover) .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]),
     .bili-video-player:not(:hover) .bili-subtitle-x-subtitle-panel:not([data-has-been-manual-dragged="true"]) {
-      transform: translateY(-135px) !important;
+      transform: translateY(-60px) !important;
     }
 
     #movie_player:hover .caption-window:not([data-has-been-manual-dragged="true"]),
@@ -1018,7 +1067,7 @@ function updateSubtitleStyles() {
       white-space: pre-wrap !important;
       border: none !important;
       font-size: ${fontSizePx} !important;
-      display: inline-block !important; /* Agar lebarnya membungkus kotak */
+      /* display diabaikan, biarkan Bilibili menggunakan defaultnya */
       z-index: 999999 !important;
     }
     
