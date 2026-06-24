@@ -2,15 +2,35 @@
 // background.js - Highly Robust Multi-Fallback Translation Engine
 // =====================================================
 
-// Listen for installation
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({
+// Pastikan service worker tetap hidup dengan alarm periodik
+// periodInMinutes >= 1 diperlukan agar alarm bisa bangunkan SW dari cold start (MV3)
+const ALARM_NAME = 'keepAlive';
+
+async function initDefaults() {
+  await chrome.storage.sync.set({
     targetLang: 'id',
     autoTranslate: true,
-    fontSize: '16',
+    fontSize: 'medium',
     subtitleMode: 'dual',
     bgOpacity: '60'
   });
+}
+
+// Listen for installation & browser startup
+chrome.runtime.onInstalled.addListener(async () => {
+  await initDefaults();
+  await chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 });
+});
+
+chrome.runtime.onStartup.addListener(async () => {
+  await chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 });
+});
+
+// Jaga service worker tetap hidup
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === ALARM_NAME) {
+    // NOOP — wakeup sufficient
+  }
 });
 
 // Listen for messages from content script

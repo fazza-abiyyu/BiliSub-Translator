@@ -28,12 +28,24 @@ let extensionContextValid = true;
 
 function checkExtensionContext() {
   try {
-    return !!chrome.runtime.id;
+    const valid = !!chrome.runtime.id;
+    if (valid) extensionContextValid = true;
+    return valid;
   } catch (_) {
     extensionContextValid = false;
     return false;
   }
 }
+
+// Periodic context check supaya bisa recovery kalau SW restart
+setInterval(() => {
+  checkExtensionContext();
+  if (!extensionContextValid) {
+    try {
+      if (chrome.runtime?.id) extensionContextValid = true;
+    } catch (_) {}
+  }
+}, 10000);
 
 function checkUrlChange() {
   if (window.location.href !== lastUrl) {
@@ -256,9 +268,9 @@ function autoEnableBilibiliSubtitles() {
   }, 600);
 }
 
-// Load settings
-chrome.storage.sync.get(
-  {
+// Load settings with timeout fallback
+function loadSettingsAndInit() {
+  const defaults = {
     targetLang: 'id',
     autoTranslate: true,
     fontSize: 'medium',
@@ -267,23 +279,41 @@ chrome.storage.sync.get(
     draggedLeftPercent: null,
     draggedTopPercent: null,
     hasBeenManualDragged: false
-  },
-  (items) => {
-    settings = items;
-    if (items.hasBeenManualDragged && items.draggedLeftPercent !== null && items.draggedTopPercent !== null) {
-      globalDraggedOffset = {
-        left: items.draggedLeftPercent,
-        top: items.draggedTopPercent,
-        isPercent: true
-      };
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initialize);
-    } else {
-      initialize();
-    }
+  };
+
+  let settled = false;
+
+  chrome.storage.sync.get(defaults, (items) => {
+    if (settled) return;
+    settled = true;
+    applySettings(items);
+  });
+
+  // Timeout: jika storage.get tidak merespon dalam 3 detik, paksa pakai default
+  setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    applySettings(defaults);
+  }, 3000);
+}
+
+function applySettings(items) {
+  settings = items;
+  if (items.hasBeenManualDragged && items.draggedLeftPercent !== null && items.draggedTopPercent !== null) {
+    globalDraggedOffset = {
+      left: items.draggedLeftPercent,
+      top: items.draggedTopPercent,
+      isPercent: true
+    };
   }
-);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+}
+
+loadSettingsAndInit();
 
 // Listen for settings changes
 chrome.runtime.onMessage.addListener((message) => {
@@ -419,24 +449,36 @@ async function translateSubtitleTrack(subtitles) {
 }
 
 // Multi-Fallback Translation Engine (Routed through background worker to bypass CORS/CSP)
-async function translateText(text, targetLang) {
-  if (!extensionContextValid) return null;
-  try {
-    const response = await chrome.runtime.sendMessage({
-      type: 'translateText',
-      text: text,
-      targetLang: targetLang
-    });
-    return response?.translation || null;
-  } catch (err) {
-    if (err.message?.includes('Extension context invalidated')) {
-      extensionContextValid = false;
-      console.error('[BiliSub] Extension context invalidated. Translation stopped.');
-    } else {
+async function translateText(text, targetLang, retries = 3) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (!extensionContextValid) return null;
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'translateText',
+        text: text,
+        targetLang: targetLang
+      });
+      if (response?.translation) return response.translation;
+      return null;
+    } catch (err) {
+      if (err.message?.includes('Extension context invalidated')) {
+        extensionContextValid = false;
+        console.error('[BiliSub] Extension context invalidated.');
+        return null;
+      }
+      const isConnError = err.message?.includes('Could not establish connection') ||
+                          err.message?.includes('connection') ||
+                          err.message?.includes('timeout');
+      if (isConnError && attempt < retries) {
+        console.warn(`[BiliSub] SW not ready, retry ${attempt + 1}/${retries}...`);
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
       console.error('Translation message error:', err);
+      return null;
     }
-    return null;
   }
+  return null;
 }
 
 // Background Translation Loop (For Pre-translating timeline fallback)
@@ -1071,18 +1113,19 @@ function updateSubtitleStyles() {
       z-index: 999999 !important;
     }
     
-    /* Wadah kustom disematkan secara absolut 100% tepat di sisi bawah teks asli */
+    /* Wadah kustom — max-content biar teks mengikuti panjang konten,
+       max-width dibatasi agar tidak lebih lebar dari player */
     html body .custom-bili-subtitle-group {
       position: absolute !important;
-      top: calc(100% + 4px) !important; /* Jarak 4px dari kotak aslinya */
+      top: calc(100% + 4px) !important;
       left: 50% !important;
-      transform: translateX(-50%) !important; /* Menengahkannya mengikuti teks asli */
+      transform: translateX(-50%) !important;
       display: flex !important;
       justify-content: center !important;
       text-align: center !important;
       margin: 0 !important;
       width: max-content !important;
-      max-width: 90vw !important;
+      max-width: min(90vw, 900px) !important;
       pointer-events: auto !important;
       z-index: 1001 !important;
     }
@@ -1099,6 +1142,8 @@ function updateSubtitleStyles() {
       line-height: 1.4 !important;
       border: none !important;
       white-space: pre-wrap !important;
+      overflow-wrap: break-word !important;
+      word-break: break-word !important;
     }
     
     /* Untuk mode "Translation Only": Menyembunyikan parent tanpa menghilangkan child (terjemahan) */
