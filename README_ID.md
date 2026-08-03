@@ -13,11 +13,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Languages](https://img.shields.io/badge/Languages-100+-blue)
-![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge-green)
+![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Firefox-green)
 
 [English](./README.md) | **Indonesian** | [中文](./README_ZH.md)
 
-> 🚀 Ekstensi Chrome/Edge yang menambahkan subtitle multi-bahasa real-time ke video Bilibili menggunakan Google Translate. Terjemahan otomatis yang langsung jalan tanpa ribet!
+> 🚀 Ekstensi Chrome/Edge/Firefox yang menambahkan subtitle multi-bahasa real-time ke video Bilibili menggunakan Google Translate. Terjemahan otomatis yang langsung jalan tanpa ribet!
 
 ---
 
@@ -62,13 +62,24 @@
 
 ## 🚀 Instalasi
 
+Ekstensi ini mendukung **Chrome, Edge, dan Firefox**. Pilih browser Anda:
+
+### Chrome / Edge
+
 1. Download atau clone repository ini
 2. Buka Chrome, kunjungi `chrome://extensions/`
 3. Aktifkan **Developer mode** di pojok kanan atas
 4. Klik **Load unpacked** lalu pilih folder ekstensi ini
 5. Buka video Bilibili apa saja — terjemahan otomatis langsung muncul!
 
-**Untuk Edge:** Sama seperti Chrome, buka `edge://extensions/` lalu ikuti langkah yang sama.
+### Firefox
+
+1. Download atau clone repository ini
+2. Rename `manifest-firefox.json` menjadi `manifest.json` di folder ekstensi
+3. Buka Firefox, kunjungi `about:debugging`
+4. Klik **This Firefox** (atau **Enable temporary add-ons** jika tidak muncul)
+5. Klik **Load Temporary Add-on** lalu pilih file `manifest.json`
+6. Buka video Bilibili apa saja — terjemahan otomatis langsung muncul!
 
 > [!TIP]
 > **Belum tersedia di Extension Store**

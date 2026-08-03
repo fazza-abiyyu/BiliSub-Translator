@@ -13,11 +13,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Languages](https://img.shields.io/badge/Languages-100+-blue)
-![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge-green)
+![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Firefox-green)
 
 [English](./README.md) | [Indonesian](./README_ID.md) | **中文**
 
-> 🚀 一款 Chrome/Edge 浏览器扩展，使用 Google Translate 为 B站视频添加实时多语言字幕。开箱即用，即装即翻！
+> 🚀 一款 Chrome/Edge/Firefox 浏览器扩展，使用 Google Translate 为 B站视频添加实时多语言字幕。开箱即用，即装即翻！
 
 ---
 
@@ -62,13 +62,24 @@
 
 ## 🚀 安装方法
 
+本扩展支持 **Chrome、Edge 和 Firefox**。请选择您的浏览器：
+
+### Chrome / Edge
+
 1. 下载或克隆本仓库
 2. 打开 Chrome，访问 `chrome://extensions/`
 3. 在右上角启用**开发者模式**
 4. 点击**加载已解压的扩展程序**，选择本扩展文件夹
 5. 打开任意 B 站视频 — 自动翻译即刻生效！
 
-**Edge 用户：** 同 Chrome，打开 `edge://extensions/` 后按相同步骤操作。
+### Firefox
+
+1. 下载或克隆本仓库
+2. 将 `manifest-firefox.json` 重命名为 `manifest.json` 放在扩展文件夹中
+3. 打开 Firefox，访问 `about:debugging`
+4. 点击**This Firefox**（或**启用临时附加组件**如果看不到）
+5. 点击**加载临时附加组件**，选择 `manifest.json` 文件
+6. 打开任意 B 站视频 — 自动翻译即刻生效！
 
 > [!TIP]
 > **暂未上架应用商店**

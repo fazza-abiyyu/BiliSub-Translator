@@ -13,7 +13,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Languages](https://img.shields.io/badge/Languages-100+-blue)
-![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge-green)
+![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Firefox-green)
 
 **English** | [Indonesian](./README_ID.md) | [中文](./README_ZH.md)
 
@@ -62,18 +62,29 @@
 
 ## 🚀 Installation
 
+This extension supports **Chrome, Edge, and Firefox**. Follow the instructions for your browser:
+
+### Chrome / Edge
+
 1. Download or clone this repository
 2. Open Chrome, go to `chrome://extensions/`
 3. Enable **Developer mode** in the top right corner
 4. Click **Load unpacked** and select this extension folder
 5. Open any Bilibili video — translations appear automatically!
 
-**For Edge:** Same as Chrome, open `edge://extensions/` and follow the same steps.
+### Firefox
+
+1. Download or clone this repository
+2. Rename `manifest-firefox.json` to `manifest.json` in the extension folder
+3. Open Firefox, go to `about:debugging`
+4. Click **This Firefox** (or **Enable temporary add-ons** if not visible)
+5. Click **Load Temporary Add-on** and select the `manifest.json` file
+6. Open any Bilibili video — translations appear automatically!
 
 > [!TIP]
 > **Not yet available on Extension Stores**
 >
-> Currently BiliSub can only be installed manually (Load Unpacked). Plans to publish to Chrome Web Store & Microsoft Edge Add-ons are in the roadmap.
+> Currently BiliSub can only be installed manually. Plans to publish to Chrome Web Store & Microsoft Edge Add-ons are in the roadmap.
 
 ## 🎮 Usage
 
