@@ -229,13 +229,19 @@ function autoEnableBilibiliSubtitles() {
     const subtitleItems = document.querySelectorAll('.bpx-player-ctrl-subtitle-language-item');
     
     if (subtitleItems.length > 0) {
-      // Menu opened — pick a Chinese track
-      let targetItem = document.querySelector('.bpx-player-ctrl-subtitle-language-item[data-lan="ai-zh"]');
+      // Menu opened — try to pick a Chinese track first
+      let targetItem = Array.from(subtitleItems).find(item => {
+        const lan = (item.getAttribute('data-lan') || '').toLowerCase();
+        const text = (item.textContent || '').toLowerCase();
+        return lan === 'ai-zh' || lan === 'ai-cn' || lan === 'zh-cn' ||
+               lan.includes('zh') || lan.includes('chi') || text.includes('中文') || text.includes('汉语');
+      });
       if (!targetItem) {
+        // Still no Chinese track — fall back to English (ai-en)
         targetItem = Array.from(subtitleItems).find(item => {
           const lan = (item.getAttribute('data-lan') || '').toLowerCase();
           const text = (item.textContent || '').toLowerCase();
-          return lan.includes('zh') || lan.includes('chi') || text.includes('中文') || text.includes('汉语');
+          return lan === 'ai-en' || lan.includes('en') || text === 'english' || text.includes('英语');
         });
       }
       if (!targetItem) {
@@ -596,7 +602,11 @@ async function extractSubtitleData() {
     const subtitleList = infoData?.data?.subtitle?.subtitles;
     if (!subtitleList || !subtitleList.length) return;
 
-    const zhSub = subtitleList.find(s => s.lan === 'zh-CN' || s.lan === 'ai-zh') || subtitleList[0];
+    let zhSub = subtitleList.find(s => s.lan === 'zh-CN' || s.lan === 'ai-zh' || s.lan === 'ai-cn');
+    if (!zhSub) {
+      zhSub = subtitleList.find(s => s.lan === 'ai-en' || s.lan.startsWith('en'));
+    }
+    zhSub = zhSub || subtitleList[0];
     if (!zhSub || !zhSub.subtitle_url) return;
 
     let subUrl = zhSub.subtitle_url;
@@ -739,7 +749,7 @@ async function handleSubtitleUpdate(subtitlePanel) {
   if (!originalTextEl) return;
 
   const rawText = getCleanOriginalText(originalTextEl);
-  if (rawText.includes('\n') || !/[\u4e00-\u9fa5]/.test(rawText.replace(/\|/g, '').trim())) {
+  if (rawText.includes('\n') || !rawText.replace(/\|/g, '').trim()) {
     const existing = originalTextEl.querySelector('.translated-subtitle');
     if (existing) {
       existing.textContent = '';
@@ -749,7 +759,7 @@ async function handleSubtitleUpdate(subtitlePanel) {
   }
 
   const originalText = rawText.replace(/\|/g, '').trim();
-  if (!originalText || !/[\u4e00-\u9fa5]/.test(originalText)) {
+  if (!originalText) {
     const el = originalTextEl.querySelector('.translated-subtitle');
     if (el) {
       el.textContent = '';
