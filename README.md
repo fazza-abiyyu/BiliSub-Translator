@@ -41,11 +41,11 @@
 ## ⚠️ Requirements
 
 > [!IMPORTANT]
-> **BiliSub requires AI-Generated Chinese (AI-Zh) subtitles** to translate.
+> **BiliSub needs an AI subtitle track to translate.**
 >
-> This extension automatically detects and enables the `ai-zh` / `zh-CN` subtitle track from Bilibili videos. If a video **does not have AI-generated subtitles**, translation will not work because there is no source text to translate.
+> The extension automatically detects and enables the `ai-zh` / `ai-cn` / `zh-CN` (AI-Generated Chinese) subtitle track from Bilibili videos. If a video **does not have a Chinese track**, it automatically **falls back to the `ai-en` (AI-Generated English) track** so translation still works.
 >
-> Most Bilibili videos already have AI-Zh subtitles. If not, make sure the video creator has enabled the AI subtitle feature.
+> Most Bilibili videos already have AI subtitles. If not, make sure the video creator has enabled the AI subtitle feature.
 
 ## ✨ Features
 
@@ -224,7 +224,7 @@ graph TD
 
 **How it works:**
 1. The extension injects an interceptor into the Bilibili page to capture subtitle data
-2. It automatically finds and enables the **ai-zh** (AI-Generated Chinese) subtitle track
+2. It automatically finds and enables the **ai-zh** / **ai-cn** (AI-Generated Chinese) subtitle track, falling back to **ai-en** (AI English) if no Chinese track is available
 3. Each subtitle line is translated via Google Translate API in real-time
 4. Translation results appear below the original subtitle (dual subtitle mode)
 5. If translation fails, the original text is still shown (graceful degradation)

@@ -41,11 +41,11 @@
 ## ⚠️ Persyaratan
 
 > [!IMPORTANT]
-> **BiliSub membutuhkan subtitle AI-Generated Chinese (AI-Zh)** untuk bisa menerjemahkan.
+> **BiliSub membutuhkan track subtitle AI untuk bisa menerjemahkan.**
 >
-> Ekstensi ini secara otomatis mendeteksi dan mengaktifkan track subtitle `ai-zh` / `zh-CN` dari video Bilibili. Jika video **tidak memiliki subtitle AI-generated**, terjemahan tidak akan berfungsi karena tidak ada teks sumber yang bisa diterjemahkan.
+> Ekstensi ini secara otomatis mendeteksi dan mengaktifkan track subtitle `ai-zh` / `ai-cn` / `zh-CN` (AI-Generated Chinese) dari video Bilibili. Jika video **tidak memiliki track Chinese**, ekstensi otomatis **fallback ke track `ai-en` (AI-Generated English)** sehingga terjemahan tetap berfungsi.
 >
-> Sebagian besar video Bilibili sudah memiliki AI-Zh subtitle. Jika belum, pastikan creator video telah mengaktifkan fitur AI subtitle.
+> Sebagian besar video Bilibili sudah memiliki AI subtitle. Jika belum, pastikan creator video telah mengaktifkan fitur AI subtitle.
 
 ## ✨ Fitur
 
@@ -224,7 +224,7 @@ graph TD
 
 **Cara kerja:**
 1. Ekstensi menyuntikkan interceptor ke halaman Bilibili untuk menangkap data subtitle
-2. Secara otomatis mencari dan mengaktifkan track subtitle **ai-zh** (AI-Generated Chinese)
+2. Secara otomatis mencari dan mengaktifkan track subtitle **ai-zh** / **ai-cn** (AI-Generated Chinese), dengan fallback ke **ai-en** (AI English) jika track Chinese tidak tersedia
 3. Setiap baris subtitle diterjemahkan via Google Translate API secara real-time
 4. Hasil terjemahan ditampilkan di bawah subtitle asli (dual subtitle mode)
 5. Jika terjemahan gagal, teks asli tetap ditampilkan (graceful degradation)
