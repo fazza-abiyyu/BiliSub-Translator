@@ -62,12 +62,12 @@
 
 ## 🚀 Installation
 
-This extension supports **Chrome, Edge, and Firefox**. Follow the instructions for your browser:
+BiliSub ships a **single cross-browser `manifest.json`** and runs on Chrome, Edge, and Firefox (Firefox 142+, Chrome 111+).
 
 ### Chrome / Edge
 
 1. Download or clone this repository
-2. Open Chrome, go to `chrome://extensions/`
+2. Go to `chrome://extensions/`
 3. Enable **Developer mode** in the top right corner
 4. Click **Load unpacked** and select this extension folder
 5. Open any Bilibili video — translations appear automatically!
@@ -75,16 +75,19 @@ This extension supports **Chrome, Edge, and Firefox**. Follow the instructions f
 ### Firefox
 
 1. Download or clone this repository
-2. Rename `manifest-firefox.json` to `manifest.json` in the extension folder
-3. Open Firefox, go to `about:debugging`
-4. Click **This Firefox** (or **Enable temporary add-ons** if not visible)
-5. Click **Load Temporary Add-on** and select the `manifest.json` file
-6. Open any Bilibili video — translations appear automatically!
+2. Open Firefox and go to `about:debugging`
+3. Click **This Firefox** (or **Enable temporary add-ons** if not visible)
+4. Click **Load Temporary Add-on** and select the `manifest.json` file
+5. Open any Bilibili video — translations appear automatically!
 
 > [!TIP]
-> **Not yet available on Extension Stores**
+> **Available from Firefox Add-ons (AMO)**
 >
-> Currently BiliSub can only be installed manually. Plans to publish to Chrome Web Store & Microsoft Edge Add-ons are in the roadmap.
+> BiliSub is published on the official Firefox Add-ons gallery. You can install it directly from
+> [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/bilisub) once reviewed, or load it
+> manually in the meantime using the steps above.
+>
+> See [`PRIVACY_POLICY_EN.md`](./PRIVACY_POLICY_EN.md) for what data (if any) is transmitted. BiliSub sends only subtitle text to translation services (Google Translate, Lingva, MyMemory); it collects no analytics, telemetry, or usage data and stores no subtitles/videos.
 
 ## 🎮 Usage
 
