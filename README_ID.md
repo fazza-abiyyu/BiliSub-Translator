@@ -82,9 +82,12 @@ Ekstensi ini mendukung **Chrome, Edge, dan Firefox**. Pilih browser Anda:
 6. Buka video Bilibili apa saja — terjemahan otomatis langsung muncul!
 
 > [!TIP]
-> **Belum tersedia di Extension Store**
+> **Tersedia di Firefox Add-ons**
 >
-> Saat ini BiliSub hanya bisa diinstal secara manual (Load Unpacked). Rencana publikasi ke Chrome Web Store & Microsoft Edge Add-ons ada di roadmap.
+> BiliSub sudah tersedia di Firefox Add-ons resmi. Kamu bisa langsung install dari
+> [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/bilisub/), atau load manual mengikuti langkah-langkah di atas.
+>
+> Untuk Chromium (Chrome / Edge) belum tersedia di toko ekstensi, silakan install manual. Lihat [`PRIVACY_POLICY_EN.md`](./PRIVACY_POLICY_EN.md) untuk info privasi.
 
 ## 🎮 Cara Pakai
 

@@ -82,9 +82,12 @@
 6. 打开任意 B 站视频 — 自动翻译即刻生效！
 
 > [!TIP]
-> **暂未上架应用商店**
+> **已上架 Firefox Add-ons**
 >
-> 目前 BiliSub 仅支持手动安装（加载已解压的扩展程序）。上架 Chrome Web Store 和 Microsoft Edge Add-ons 的计划已在路线图中。
+> BiliSub 已发布在官方 Firefox Add-ons 商店。你可以直接从
+> [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/bilisub/) 安装，或按照上方步骤手动加载。
+>
+> Chromium 浏览器（Chrome / Edge）暂未上架商店，请使用手动安装方式。详见 [`PRIVACY_POLICY.md`](./PRIVACY_POLICY.md)。
 
 ## 🎮 使用方法
 
