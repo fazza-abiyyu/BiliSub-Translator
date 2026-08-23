@@ -12,7 +12,8 @@ async function initDefaults() {
     autoTranslate: true,
     fontSize: 'medium',
     subtitleMode: 'dual',
-    bgOpacity: '60'
+    bgOpacity: '60',
+    hoverTranslate: true
   });
 }
 
@@ -107,22 +108,29 @@ async function translateText(text, targetLang) {
     console.error('MyMemory backup failed...', e);
   }
 
-  // 4. Try Google Translate Mobile API (Backup 3)
+  // 4. Try Google Translate Dictionary API (Backup 3 - Highly Reliable)
   try {
     const sourceLang = /[\u4e00-\u9fa5]/.test(text) ? 'zh' : 'auto';
     const resp = await fetch(
-      `https://translate.google.com/translate_a/single?client=at&sl=${sourceLang}&tl=${targetLang}&q=${encodeURIComponent(text)}`,
+      `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${sourceLang}&tl=${targetLang}&q=${encodeURIComponent(text)}`,
       { cache: 'no-store' }
     );
     if (resp.ok) {
       const data = await resp.json();
-      const result = data?.sentences?.[0]?.trans || (Array.isArray(data) ? data[0] : null);
-      if (result && !result.includes('302 Moved')) {
+      let result = '';
+      if (data) {
+        if (Array.isArray(data[0])) {
+          result = data[0][0];
+        } else if (typeof data[0] === 'string') {
+          result = data[0];
+        }
+      }
+      if (result && !result.includes('302 Moved') && !result.includes('sorry/index')) {
         return result;
       }
     }
   } catch (e) {
-    console.error('Google Translate mobile backup failed...', e);
+    console.error('Google Translate dict-chrome-ex fallback failed...', e);
   }
 
   return null;

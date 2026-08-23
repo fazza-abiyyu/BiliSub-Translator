@@ -15,4 +15,186 @@
 
 .translated-subtitle.hide {
   display: none !important;
+}
+
+/* Hover Translate Button Trigger */
+.bilisub-hover-btn {
+  position: absolute;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #FB7299;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(251, 114, 153, 0.4);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+  pointer-events: none; /* Ignored until visible */
+}
+
+.bilisub-hover-btn.show {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.bilisub-hover-btn:hover {
+  background: #ff85a7;
+  transform: scale(1.1);
+  box-shadow: 0 6px 14px rgba(251, 114, 153, 0.5);
+}
+
+.bilisub-hover-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: #ffffff;
+}
+
+/* Translation Popup Card */
+.bilisub-popup-card {
+  position: absolute;
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(251, 114, 153, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(0, 0, 0, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.95) translateY(5px);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.bilisub-popup-card.show {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+.bilisub-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #fdf5f7;
+  border-bottom: 1px solid rgba(251, 114, 153, 0.1);
+}
+
+.bilisub-popup-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bilisub-popup-title-group svg {
+  width: 14px;
+  height: 14px;
+  fill: #FB7299;
+}
+
+.bilisub-popup-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #FB7299;
+}
+
+.bilisub-popup-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+  padding: 2px;
+}
+
+.bilisub-popup-close-btn:hover {
+  color: #FB7299;
+}
+
+.bilisub-popup-content {
+  padding: 14px;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.bilisub-popup-source {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 8px;
+  word-break: break-all;
+  border-left: 2px solid #ddd;
+  padding-left: 6px;
+}
+
+.bilisub-popup-target {
+  font-weight: 500;
+  color: #1a1a2e;
+  word-break: break-all;
+}
+
+.bilisub-popup-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #888;
+  font-size: 12px;
+}
+
+.bilisub-popup-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(251, 114, 153, 0.2);
+  border-top-color: #FB7299;
+  border-radius: 50%;
+  animation: bilisub-spin 0.6s linear infinite;
+}
+
+@keyframes bilisub-spin {
+  to { transform: rotate(360deg); }
+}
+
+.bilisub-popup-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  background: #fdf5f7;
+  border-top: 1px solid rgba(251, 114, 153, 0.05);
+}
+
+.bilisub-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.bilisub-copy-btn:hover {
+  color: #FB7299;
+}
+
+.bilisub-copy-btn svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
 } 

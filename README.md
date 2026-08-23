@@ -23,9 +23,9 @@
 
 ## 📷 Preview
 
-| Popup Settings | Dual Subtitles in Action |
-|:---:|:---:|
-| ![Popup Settings](./asset/popup-setting.png) | ![Dual Subtitles](./asset/dual-subtitle.png) |
+| Popup Settings | Popup UI Translation | Dual Subtitles in Action |
+|:---:|:---:|:---:|
+| ![Popup Settings](./asset/popup-setting.png) | ![Popup Translation](./asset/tip-popup-translete.jpeg) | ![Dual Subtitles](./asset/dual-subtitle.png) |
 
 ---
 
@@ -59,6 +59,7 @@
 - ⚡ Instant fallback to original text if translation fails
 - 🛠 No API key required
 - ✅ Auto-enables AI-Zh subtitle when video loads
+- 🌐 **Popup UI Translation** — popup interface auto-translates to your selected target language
 
 ## 🚀 Installation
 

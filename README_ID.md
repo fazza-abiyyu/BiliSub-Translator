@@ -23,9 +23,9 @@
 
 ## 📷 Preview
 
-| Pengaturan Popup | Subtitle Ganda di Video |
-|:---:|:---:|
-| ![Pengaturan Popup](./asset/popup-setting.png) | ![Subtitle Ganda](./asset/dual-subtitle.png) |
+| Pengaturan Popup | Terjemahan UI Popup | Subtitle Ganda di Video |
+|:---:|:---:|:---:|
+| ![Pengaturan Popup](./asset/popup-setting.png) | ![Terjemahan Popup](./asset/tip-popup-translete.jpeg) | ![Subtitle Ganda](./asset/dual-subtitle.png) |
 
 ---
 
@@ -59,6 +59,7 @@
 - ⚡ Fallback instan ke teks asli jika terjemahan gagal
 - 🛠 Tidak perlu API key
 - ✅ Auto-enable subtitle AI-Zh saat video dimuat
+- 🌐 **Terjemahan UI Popup** — antarmuka popup otomatis diterjemahkan ke bahasa tujuan yang dipilih
 
 ## 🚀 Instalasi
 

@@ -23,9 +23,9 @@
 
 ## 📷 预览
 
-| 弹窗设置 | 视频双字幕效果 |
-|:---:|:---:|
-| ![弹窗设置](./asset/popup-setting.png) | ![双字幕](./asset/dual-subtitle.png) |
+| 弹窗设置 | 弹窗界面翻译 | 视频双字幕效果 |
+|:---:|:---:|:---:|
+| ![弹窗设置](./asset/popup-setting.png) | ![弹窗翻译](./asset/tip-popup-translete.jpeg) | ![双字幕](./asset/dual-subtitle.png) |
 
 ---
 
@@ -59,6 +59,7 @@
 - ⚡ 翻译失败时即时回退到原文
 - 🛠 无需 API 密钥
 - ✅ 视频加载时自动启用 AI-Zh 字幕
+- 🌐 **弹窗界面翻译** — 弹窗界面自动翻译为你选择的目标语言
 
 ## 🚀 安装方法
 
