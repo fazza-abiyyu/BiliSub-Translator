@@ -82,7 +82,23 @@ Or load unpacked manually:
 4. Click **Load unpacked** and select this extension folder
 5. Open any Bilibili or YouTube video — translations appear automatically!
 
+### Firefox
+
+Install directly from the **Firefox Add-ons Store (AMO)**:
+
+👉 **[Get BiliSub on Firefox AMO](https://addons.mozilla.org/firefox/addon/bilisub)**
+
+Or load temporarily from `about:debugging`:
+
+1. Download or clone this repository
+2. Open Firefox and go to `about:debugging`
+3. Click **This Firefox** (or **Enable temporary add-ons** if not visible)
+4. Click **Load Temporary Add-on** and select the `manifest.json` file
+5. Open any Bilibili or YouTube video — translations appear automatically!
+
 ### Chrome
+
+**Chrome Web Store** is coming soon! In the meantime, load unpacked manually:
 
 1. Download or clone this repository
 2. Go to `chrome://extensions/`
@@ -90,22 +106,7 @@ Or load unpacked manually:
 4. Click **Load unpacked** and select this extension folder
 5. Open any Bilibili or YouTube video — translations appear automatically!
 
-### Firefox
-
-1. Download or clone this repository
-2. Open Firefox and go to `about:debugging`
-3. Click **This Firefox** (or **Enable temporary add-ons** if not visible)
-4. Click **Load Temporary Add-on** and select the `manifest.json` file
-5. Open any Bilibili video — translations appear automatically!
-
-> [!TIP]
-> **Available on Browser Extension Stores**
->
-> BiliSub is available on the official extension stores:
-> - 🏪 **Edge Add-ons**: [Install directly](https://microsoftedge.microsoft.com/addons/detail/bilisub/geknhkeiknoepgoeemdhkcknekkojkeb)
-> - 🦊 **Firefox Add-ons (AMO)**: [Install directly](https://addons.mozilla.org/firefox/addon/bilisub)
-> - 🌐 **Chrome Web Store**: Coming soon!
->
+> [!NOTE]
 > See [`PRIVACY_POLICY_EN.md`](./PRIVACY_POLICY_EN.md) for what data (if any) is transmitted. BiliSub sends only subtitle text to translation services (Google Translate, Lingva, MyMemory); it collects no analytics, telemetry, or usage data and stores no subtitles/videos.
 
 ## 🎮 Usage
