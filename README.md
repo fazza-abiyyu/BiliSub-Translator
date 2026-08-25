@@ -86,7 +86,7 @@ Or load unpacked manually:
 
 Install directly from the **Firefox Add-ons Store (AMO)**:
 
-👉 **[Get BiliSub on Firefox AMO](https://addons.mozilla.org/firefox/addon/bilisub)**
+👉 **[Get BiliSub on Firefox AMO](https://addons.mozilla.org/en-US/firefox/addon/bilisub/)**
 
 Or load temporarily from `about:debugging`:
 
