@@ -19,8 +19,7 @@
     "*://api.mymemory.translated.net/*"
   ],
   "background": {
-    "service_worker": "background.js",
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",

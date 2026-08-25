@@ -14,6 +14,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Languages](https://img.shields.io/badge/Languages-100+-blue)
 ![Platform](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Firefox-green)
+[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Install-blue)](https://microsoftedge.microsoft.com/addons/detail/bilisub/geknhkeiknoepgoeemdhkcknekkojkeb)
 
 **English** | [Indonesian](./README_ID.md) | [中文](./README_ZH.md)
 
