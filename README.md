@@ -68,7 +68,7 @@
 
 BiliSub ships a **single cross-browser `manifest.json`** and runs on Chrome, Edge, and Firefox (Firefox 142+, Chrome 111+).
 
-### Edge (Recommended)
+### Edge
 
 Install directly from the **Microsoft Edge Add-ons Store**:
 
@@ -103,7 +103,7 @@ Or load unpacked manually:
 >
 > BiliSub is available on the official extension stores:
 > - 🏪 **Edge Add-ons**: [Install directly](https://microsoftedge.microsoft.com/addons/detail/bilisub/geknhkeiknoepgoeemdhkcknekkojkeb)
-> - 🦊 **Firefox Add-ons (AMO)**: [Install directly](https://addons.mozilla.org/firefox/addon/bilisub)
+> - 🦊 **Firefox Add-ons (AMO)**: Coming soon!
 > - 🌐 **Chrome Web Store**: Coming soon!
 >
 > See [`PRIVACY_POLICY_EN.md`](./PRIVACY_POLICY_EN.md) for what data (if any) is transmitted. BiliSub sends only subtitle text to translation services (Google Translate, Lingva, MyMemory); it collects no analytics, telemetry, or usage data and stores no subtitles/videos.
@@ -257,6 +257,7 @@ graph TD
 > Future development plans for **BiliSub**:
 
 - **OCR Translation** — Main feature being worked on. Enables subtitle translation for videos that **don't have AI-generated subtitles**, by capturing text that appears on screen (hardsub / embedded subtitle) via OCR then translating it in real-time.
+- Publishing to **Firefox Add-ons (AMO)** for easier installation
 - Publishing to **Chrome Web Store** for easier installation
 - Support for **multiple translation engines** (DeepL, LibreTranslate, in addition to Google Translate)
 - **Export subtitles** to .srt / .ass format
