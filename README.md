@@ -18,7 +18,7 @@
 
 **English** | [Indonesian](./README_ID.md) | [中文](./README_ZH.md)
 
-> 🚀 A Chrome/Edge extension that adds real-time multi-language subtitles to Bilibili videos using Google Translate. Fire-and-forget translation that just works!
+> 🚀 A browser extension that adds real-time multi-language subtitles to Bilibili and YouTube videos using Google Translate. Works on Chrome, Edge, and Firefox. Fire-and-forget translation that just works!
 
 ---
 
@@ -42,15 +42,17 @@
 ## ⚠️ Requirements
 
 > [!IMPORTANT]
-> **BiliSub needs an AI subtitle track to translate.**
+> **BiliSub needs subtitles to translate.**
 >
-> The extension automatically detects and enables the `ai-zh` / `ai-cn` / `zh-CN` (AI-Generated Chinese) subtitle track from Bilibili videos. If a video **does not have a Chinese track**, it automatically **falls back to the `ai-en` (AI-Generated English) track** so translation still works.
+> **For Bilibili**: The extension automatically detects and enables the `ai-zh` / `ai-cn` / `zh-CN` (AI-Generated Chinese) subtitle track. If a video **does not have a Chinese track**, it automatically **falls back to the `ai-en` (AI-Generated English) track** so translation still works.
+>
+> **For YouTube**: The extension uses YouTube's native auto-generated subtitles as the source for translation.
 >
 > Most Bilibili videos already have AI subtitles. If not, make sure the video creator has enabled the AI subtitle feature.
 
 ## ✨ Features
 
-- 🔄 Real-time subtitle translation
+- 🔄 Real-time subtitle translation for Bilibili & YouTube
 - 🔘 **Toggle On/Off** — enable/disable auto-translation anytime via popup
 - 🌍 Support for 100+ languages
 - 🎯 Dual mode: show original + translated subtitles, or translation only
@@ -66,13 +68,27 @@
 
 BiliSub ships a **single cross-browser `manifest.json`** and runs on Chrome, Edge, and Firefox (Firefox 142+, Chrome 111+).
 
-### Chrome / Edge
+### Edge (Recommended)
+
+Install directly from the **Microsoft Edge Add-ons Store**:
+
+👉 **[Get BiliSub on Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/bilisub/geknhkeiknoepgoeemdhkcknekkojkeb)**
+
+Or load unpacked manually:
+
+1. Download or clone this repository
+2. Go to `edge://extensions/`
+3. Enable **Developer mode** in the top right corner
+4. Click **Load unpacked** and select this extension folder
+5. Open any Bilibili or YouTube video — translations appear automatically!
+
+### Chrome
 
 1. Download or clone this repository
 2. Go to `chrome://extensions/`
 3. Enable **Developer mode** in the top right corner
 4. Click **Load unpacked** and select this extension folder
-5. Open any Bilibili video — translations appear automatically!
+5. Open any Bilibili or YouTube video — translations appear automatically!
 
 ### Firefox
 
@@ -83,11 +99,12 @@ BiliSub ships a **single cross-browser `manifest.json`** and runs on Chrome, Edg
 5. Open any Bilibili video — translations appear automatically!
 
 > [!TIP]
-> **Available from Firefox Add-ons (AMO)**
+> **Available on Browser Extension Stores**
 >
-> BiliSub is published on the official Firefox Add-ons gallery. You can install it directly from
-> [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/bilisub) once reviewed, or load it
-> manually in the meantime using the steps above.
+> BiliSub is available on the official extension stores:
+> - 🏪 **Edge Add-ons**: [Install directly](https://microsoftedge.microsoft.com/addons/detail/bilisub/geknhkeiknoepgoeemdhkcknekkojkeb)
+> - 🦊 **Firefox Add-ons (AMO)**: [Install directly](https://addons.mozilla.org/firefox/addon/bilisub)
+> - 🌐 **Chrome Web Store**: Coming soon!
 >
 > See [`PRIVACY_POLICY_EN.md`](./PRIVACY_POLICY_EN.md) for what data (if any) is transmitted. BiliSub sends only subtitle text to translation services (Google Translate, Lingva, MyMemory); it collects no analytics, telemetry, or usage data and stores no subtitles/videos.
 
@@ -240,7 +257,7 @@ graph TD
 > Future development plans for **BiliSub**:
 
 - **OCR Translation** — Main feature being worked on. Enables subtitle translation for videos that **don't have AI-generated subtitles**, by capturing text that appears on screen (hardsub / embedded subtitle) via OCR then translating it in real-time.
-- Publishing to **Chrome Web Store** & **Microsoft Edge Add-ons** for easier installation
+- Publishing to **Chrome Web Store** for easier installation
 - Support for **multiple translation engines** (DeepL, LibreTranslate, in addition to Google Translate)
 - **Export subtitles** to .srt / .ass format
 
