@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BiliSub",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Add multi-language subtitles to Bilibili videos using Google Translate",
   "permissions": [
     "activeTab",
@@ -11,7 +11,6 @@
   ],
   "host_permissions": [
     "*://*.bilibili.com/*",
-    "*://*.youtube.com/*",
     "*://*.hdslb.com/*",
     "*://translate.googleapis.com/*",
     "*://translate.google.com/*",
@@ -19,7 +18,8 @@
     "*://api.mymemory.translated.net/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   },
   "action": {
     "default_popup": "popup.html",
@@ -32,8 +32,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.bilibili.com/*",
-        "*://*.youtube.com/*"
+        "*://*.bilibili.com/*"
       ],
       "js": ["interceptor.js"],
       "run_at": "document_start",
@@ -41,8 +40,7 @@
     },
     {
       "matches": [
-        "*://*.bilibili.com/*",
-        "*://*.youtube.com/*"
+        "*://*.bilibili.com/*"
       ],
       "js": ["content.js"],
       "css": ["styles.css"],

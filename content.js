@@ -1,7 +1,7 @@
 // 
 
 // =====================================================
-// Bilibili & YouTube Double Subtitles - Hybrid Architecture
+// Bilibili Double Subtitles - Hybrid Architecture
 // Inspired by Immersive Translate for high-performance and zero lag
 // =====================================================
 
@@ -577,22 +577,18 @@ function getCleanOriginalText(el) {
 
 // Initializer
 function initialize() {
-  const isYouTube = window.location.hostname.includes('youtube.com');
-  if (isYouTube) {
-    setupYouTubeObserver();
-  } else {
-    setupMutationObserver();
-    setupVideoTimeSync();
-    extractSubtitleData();
-    setInterval(extractSubtitleData, 5000);
+  setupMutationObserver();
+  setupVideoTimeSync();
+  extractSubtitleData();
+  setInterval(extractSubtitleData, 5000);
 
-    // Proactively try to auto-enable subtitles periodically until successful
-    setInterval(() => {
-      if (settings.autoTranslate && !hasAutoEnabledSubtitles) {
-        autoEnableBilibiliSubtitles();
-      }
-    }, 1000);
-  }
+  // Proactively try to auto-enable subtitles periodically until successful
+  setInterval(() => {
+    if (settings.autoTranslate && !hasAutoEnabledSubtitles) {
+      autoEnableBilibiliSubtitles();
+    }
+  }, 1000);
+
   updateSubtitleStyles();
   initHoverTranslation();
 }
@@ -845,130 +841,7 @@ function injectTranslatedSubtitle(translatedText, subtitlePanel) {
   el.classList.remove('hide');
 }
 
-// YouTube observer setup
-function setupYouTubeObserver() {
-  const observer = new MutationObserver((mutations) => {
-    let hasValidMutation = false;
-    mutations.forEach((mutation) => {
-      if (mutation.target && (
-        (mutation.target.classList && mutation.target.classList.contains('translated-subtitle')) ||
-        (mutation.target.parentElement && mutation.target.parentElement.classList.contains('translated-subtitle'))
-      )) {
-        return;
-      }
-      if (mutation.type === 'childList') {
-        const addedOnlyTranslations = Array.from(mutation.addedNodes).every(node => node.classList && node.classList.contains('translated-subtitle'));
-        const removedOnlyTranslations = Array.from(mutation.removedNodes).every(node => node.classList && node.classList.contains('translated-subtitle'));
-        if (addedOnlyTranslations && removedOnlyTranslations) {
-          return;
-        }
-      }
-      hasValidMutation = true;
-    });
-
-    if (!hasValidMutation) return;
-
-    if (settings.autoTranslate) {
-      const captionWindow = document.querySelector('.ytp-caption-window-container');
-      if (captionWindow) {
-        handleYouTubeSubtitleUpdate(captionWindow);
-      }
-    } else {
-      applyYouTubeSubtitleMode();
-    }
-  });
-
-  function startObserving() {
-    const target = document.querySelector('#movie_player');
-    if (target) {
-      observer.observe(target, { childList: true, subtree: true });
-    } else {
-      setTimeout(startObserving, 500);
-    }
-  }
-  startObserving();
-}
-
-async function handleYouTubeSubtitleUpdate(captionContainer) {
-  if (!settings.autoTranslate) return;
-
-  const captionWindow = captionContainer.querySelector('.caption-window, .ytp-caption-window-rollup, .ytp-caption-window');
-  if (captionWindow) {
-    makeElementDraggable(captionWindow);
-  }
-  if (!captionWindow || captionWindow.offsetWidth === 0) {
-    const existing = captionContainer.querySelector('.translated-subtitle');
-    if (existing) {
-      existing.textContent = '';
-      existing.classList.add('hide');
-    }
-    return;
-  }
-
-  const segments = Array.from(captionWindow.querySelectorAll('.ytp-caption-segment'));
-  if (segments.length === 0) {
-    const existing = captionWindow.querySelector('.translated-subtitle');
-    if (existing) {
-      existing.textContent = '';
-      existing.classList.add('hide');
-    }
-    return;
-  }
-
-  const originalText = segments.map(s => s.textContent.replace(/\|/g, '').trim()).join(' ');
-  if (!originalText) return;
-
-  applyYouTubeSubtitleMode();
-
-  if (translationCache.has(originalText)) {
-    injectYouTubeTranslatedSubtitle(translationCache.get(originalText), captionWindow);
-    return;
-  }
-
-  if (pendingTranslations.has(originalText)) return;
-  pendingTranslations.add(originalText);
-
-  let translated = await translateText(originalText, settings.targetLang);
-  
-  pendingTranslations.delete(originalText);
-  if (!translated || translated === originalText) return;
-
-  translationCache.set(originalText, translated);
-  injectYouTubeTranslatedSubtitle(translated, captionWindow);
-}
-
-function injectYouTubeTranslatedSubtitle(translatedText, captionWindow) {
-  let el = captionWindow.querySelector('.translated-subtitle');
-  if (!el) {
-    el = document.createElement('div');
-    el.className = 'translated-subtitle';
-    captionWindow.appendChild(el);
-  }
-
-  if (el.textContent !== translatedText) {
-    el.textContent = translatedText;
-  }
-  el.classList.remove('hide');
-}
-
-function applyYouTubeSubtitleMode() {
-  const segments = document.querySelectorAll('.ytp-caption-segment');
-  const isTranslationOnly = settings.autoTranslate && settings.subtitleMode === 'translationOnly';
-  segments.forEach(seg => {
-    if (isTranslationOnly) {
-      seg.style.setProperty('display', 'none', 'important');
-    } else {
-      seg.style.removeProperty('display');
-    }
-  });
-
-  const captionWindow = document.querySelector('.ytp-caption-window-container .caption-window, .ytp-caption-window-container .ytp-caption-window-rollup, .ytp-caption-window-container .ytp-caption-window');
-  if (captionWindow) {
-    makeElementDraggable(captionWindow);
-  }
-}
-
-// Visibility modes for both platforms
+// Visibility modes
 function applySubtitleMode() {
   const isTranslationOnly = settings.autoTranslate && settings.subtitleMode === 'translationOnly';
   
@@ -1000,8 +873,6 @@ function applySubtitleMode() {
       origText.classList.remove('hide-subtitle');
     }
   });
-
-  applyYouTubeSubtitleMode();
 }
 
 // Styling Control
@@ -1014,10 +885,6 @@ function updateSubtitleStyles() {
   if (!settings.autoTranslate) {
     const existingBiliTranslation = document.querySelectorAll('.custom-bili-subtitle-group');
     existingBiliTranslation.forEach(el => el.remove());
-    const existingYtTranslation = document.querySelector('.ytp-caption-window-container .translated-subtitle');
-    if (existingYtTranslation) {
-      existingYtTranslation.remove();
-    }
     applySubtitleMode();
     return;
   }
@@ -1227,7 +1094,7 @@ function hasForeignText(el) {
 function findTranslationTarget(el) {
   if (!el) return null;
   
-  // Look for common Bilibili and YouTube comment/content wrappers
+  // Look for common Bilibili comment/content wrappers
   const commentContent = el.closest('.reply-content, .reply-text, .comment-text, .reply-item-content, .sub-reply-content, [class*="reply-content"], [class*="comment-text"]');
   if (commentContent && hasForeignText(commentContent)) {
     return commentContent;
