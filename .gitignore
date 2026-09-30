@@ -1,5 +1,4 @@
-
 Out/
+.DS_Store
 *.xpi
 *.zip
-.DS_Store

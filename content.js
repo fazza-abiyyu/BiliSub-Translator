@@ -1,9 +1,25 @@
 // 
-
 // =====================================================
 // Bilibili Double Subtitles - Hybrid Architecture
 // Inspired by Immersive Translate for high-performance and zero lag
 // =====================================================
+
+// Tiny helper: parse HTML string into a DocumentFragment (avoids .innerHTML assignment per AMO policy)
+function parseHTML(html) {
+  const doc = new DOMParser().parseFromString(
+    `<bili-root>${html}</bili-root>`,
+    'text/html'
+  );
+  const root = doc.querySelector('bili-root');
+  const frag = document.createDocumentFragment();
+  while (root.firstChild) frag.appendChild(root.firstChild);
+  return frag;
+}
+
+function replaceChildren(el, newChildren) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+  if (newChildren) el.appendChild(newChildren);
+}
 
 let settings = {
   targetLang: 'id',
@@ -1119,18 +1135,18 @@ function initHoverTranslation() {
   hoverBtn.id = 'bilisub-hover-btn';
   hoverBtn.className = 'bilisub-hover-btn';
   hoverBtn.title = 'Translate with BiliSub';
-  hoverBtn.innerHTML = `
+  hoverBtn.appendChild(parseHTML(`
     <svg viewBox="0 0 24 24">
       <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
     </svg>
-  `;
+  `));
   document.body.appendChild(hoverBtn);
 
   // Create popup card
   popupCard = document.createElement('div');
   popupCard.id = 'bilisub-popup-card';
   popupCard.className = 'bilisub-popup-card';
-  popupCard.innerHTML = `
+  popupCard.appendChild(parseHTML(`
     <div class="bilisub-popup-header">
       <div class="bilisub-popup-title-group">
         <svg viewBox="0 0 24 24">
@@ -1146,10 +1162,10 @@ function initHoverTranslation() {
         <svg viewBox="0 0 24 24">
           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
         </svg>
-        Copy
+        <span class="bilisub-copy-label">Copy</span>
       </button>
     </div>
-  `;
+  `));
   document.body.appendChild(popupCard);
 
   // Close popup handlers
@@ -1158,14 +1174,15 @@ function initHoverTranslation() {
 
   // Copy button handler
   const copyBtn = popupCard.querySelector('.bilisub-copy-btn');
+  const copyLabel = copyBtn.querySelector('.bilisub-copy-label');
   copyBtn.addEventListener('click', () => {
     const targetTextEl = popupCard.querySelector('.bilisub-popup-target');
     if (targetTextEl) {
       navigator.clipboard.writeText(targetTextEl.textContent);
-      const originalText = copyBtn.innerHTML;
-      copyBtn.innerHTML = `Copied!`;
+      const originalLabel = copyLabel.textContent;
+      copyLabel.textContent = 'Copied!';
       setTimeout(() => {
-        copyBtn.innerHTML = originalText;
+        copyLabel.textContent = originalLabel;
       }, 1500);
     }
   });
@@ -1268,12 +1285,12 @@ function showPopupLoading(el) {
   if (!popupCard) return;
 
   const contentEl = popupCard.querySelector('.bilisub-popup-content');
-  contentEl.innerHTML = `
+  replaceChildren(contentEl, parseHTML(`
     <div class="bilisub-popup-loading">
       <div class="bilisub-popup-spinner"></div>
       <span>Translating...</span>
     </div>
-  `;
+  `));
 
   const rect = el.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -1307,10 +1324,17 @@ function showPopupTranslation(original, translation) {
   if (!popupCard) return;
 
   const contentEl = popupCard.querySelector('.bilisub-popup-content');
-  contentEl.innerHTML = `
-    <div class="bilisub-popup-source">${escapeHtml(original)}</div>
-    <div class="bilisub-popup-target">${escapeHtml(translation)}</div>
-  `;
+  const sourceDiv = document.createElement('div');
+  sourceDiv.className = 'bilisub-popup-source';
+  sourceDiv.textContent = original;
+
+  const targetDiv = document.createElement('div');
+  targetDiv.className = 'bilisub-popup-target';
+  targetDiv.textContent = translation;
+
+  replaceChildren(contentEl, null);
+  contentEl.appendChild(sourceDiv);
+  contentEl.appendChild(targetDiv);
 }
 
 function hidePopupCard() {
