@@ -44,7 +44,14 @@
         "*://*.bilibili.com/*"
       ],
       "js": [
-        "content.js"
+        "src/lib/dom.js",
+        "src/state.js",
+        "src/lib/draggable.js",
+        "src/modules/settings.js",
+        "src/modules/translation.js",
+        "src/modules/subtitles.js",
+        "src/modules/hover.js",
+        "src/index.js"
       ],
       "css": [
         "styles.css"

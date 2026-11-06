@@ -28,7 +28,7 @@ OUT = ROOT / "Out"
 FILES = [
     "manifest.json",
     "background.js",
-    "content.js",
+    "src",
     "interceptor.js",
     "interceptor-injector.js",
     "popup.html",

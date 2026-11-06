@@ -10,7 +10,7 @@
     return SUBTITLE_URL_PATTERNS.some(p => url.includes(p));
   }
 
-  // Intercept Fetch API — fire-and-forget: pass data to content.js but
+  // Intercept Fetch API — fire-and-forget: pass data to the content modules but
   // return the original response immediately so Bilibili's player isn't delayed.
   const originalFetch = window.fetch;
   window.fetch = async function(...args) {
@@ -21,7 +21,7 @@
     let response;
     try {
       response = await originalFetch.apply(this, args);
-      // Clone the response for content.js to translate in background;
+      // Clone the response for the content modules to translate in background;
       // the original response is returned immediately to Bilibili's player.
       response.clone().json().then(data => {
         if (data && data.body && Array.isArray(data.body)) {
