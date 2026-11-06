@@ -1087,100 +1087,44 @@ function updateSubtitleStyles() {
 }
 
 // =====================================================
-// Selection-Triggered Translation Engine (BiliSub Tooltip & Popup)
-// Tip tombol translate hanya muncul setelah user select (sorot) teks
+// Hover & Selection Translation Engine (BiliSub Tooltip & Popup)
 // =====================================================
 
 const FOREIGN_TEXT_REGEX = /[\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af]/; // Chinese, Japanese, Korean
 let hoverBtn = null;
 let popupCard = null;
-let currentSelectedText = '';
-let currentSelectionRect = null; // { top, left, bottom, right, width, height } viewport coords
-let selectionHideTimeout = null;
+let currentTargetEl = null;
 
-function isValidSelectedText(text) {
-  if (!text) return false;
+function hasForeignText(el) {
+  if (!el || !el.textContent) return false;
+  
+  const ignoredTags = ['HTML', 'BODY', 'SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'VIDEO', 'AUDIO', 'IMG', 'BUTTON', 'SVG', 'PATH', 'CODE', 'PRE', 'NOSCRIPT', 'IFRAME', 'HEADER', 'FOOTER', 'NAV'];
+  if (ignoredTags.includes(el.tagName)) return false;
+  
+  const text = el.textContent.trim();
   if (text.length < 2 || text.length > 600) return false;
-  // Minimal satu karakter foregin (Chinese/Japanese/Korean)
+  
   return FOREIGN_TEXT_REGEX.test(text);
 }
 
-function isInsideIgnoredTag(selection) {
-  if (!selection.rangeCount) return false;
-  const range = selection.getRangeAt(0);
-  const container = range.commonAncestorContainer;
-  const node = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
-  if (!node || !node.closest) return false;
-
-  const ignoredTags = ['HTML', 'BODY', 'SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'VIDEO', 'AUDIO', 'IMG', 'BUTTON', 'SVG', 'PATH', 'CODE', 'PRE', 'NOSCRIPT', 'IFRAME', 'HEADER', 'FOOTER', 'NAV'];
-  if (ignoredTags.includes(node.tagName)) return true;
-  if (node.closest('input, textarea, [contenteditable="true"]')) return true;
-  return false;
-}
-
-function captureSelection() {
-  const sel = window.getSelection();
-  if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
-    hideSelectionBtn();
-    return;
+function findTranslationTarget(el) {
+  if (!el) return null;
+  
+  // Look for common Bilibili comment/content wrappers
+  const commentContent = el.closest('.reply-content, .reply-text, .comment-text, .reply-item-content, .sub-reply-content, [class*="reply-content"], [class*="comment-text"]');
+  if (commentContent && hasForeignText(commentContent)) {
+    return commentContent;
   }
-
-  if (isInsideIgnoredTag(sel)) {
-    hideSelectionBtn();
-    return;
+  
+  if (hasForeignText(el)) {
+    return el;
   }
-
-  const text = sel.toString().trim();
-  if (!isValidSelectedText(text)) {
-    hideSelectionBtn();
-    return;
+  
+  if (el.parentElement && hasForeignText(el.parentElement)) {
+    return el.parentElement;
   }
-
-  currentSelectedText = text;
-
-  // Ambil bounding rect dari selection (bisa multi-line → ambil bounding yang cover semua)
-  const range = sel.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0) {
-    // Fallback: coba lewat getClientRects
-    const rects = range.getClientRects();
-    if (rects && rects.length) {
-      let minTop = Infinity, minLeft = Infinity, maxBottom = -Infinity, maxRight = -Infinity;
-      for (const r of rects) {
-        minTop = Math.min(minTop, r.top);
-        minLeft = Math.min(minLeft, r.left);
-        maxBottom = Math.max(maxBottom, r.bottom);
-        maxRight = Math.max(maxRight, r.right);
-      }
-      currentSelectionRect = {
-        top: minTop, left: minLeft,
-        bottom: maxBottom, right: maxRight,
-        width: maxRight - minLeft, height: maxBottom - minTop
-      };
-    } else {
-      hideSelectionBtn();
-      return;
-    }
-  } else {
-    currentSelectionRect = {
-      top: rect.top, left: rect.left,
-      bottom: rect.bottom, right: rect.right,
-      width: rect.width, height: rect.height
-    };
-  }
-
-  showSelectionBtn();
-}
-
-function hideSelectionBtn() {
-  currentSelectedText = '';
-  currentSelectionRect = null;
-  if (hoverBtn) hoverBtn.classList.remove('show');
-}
-
-function showSelectionBtn() {
-  if (!hoverBtn || !currentSelectionRect) return;
-  positionHoverBtnFromRect(currentSelectionRect);
+  
+  return null;
 }
 
 function initHoverTranslation() {
@@ -1190,7 +1134,7 @@ function initHoverTranslation() {
   hoverBtn = document.createElement('button');
   hoverBtn.id = 'bilisub-hover-btn';
   hoverBtn.className = 'bilisub-hover-btn';
-  hoverBtn.title = 'Translate selected text with BiliSub';
+  hoverBtn.title = 'Translate with BiliSub';
   hoverBtn.appendChild(parseHTML(`
     <svg viewBox="0 0 24 24">
       <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
@@ -1243,16 +1187,15 @@ function initHoverTranslation() {
     }
   });
 
-  // Hover button click → translate selected text
+  // Hover button click to translate
   hoverBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
-    if (!currentSelectedText) return;
+    if (!currentTargetEl) return;
 
-    const textToTranslate = currentSelectedText;
-    const anchorRect = currentSelectionRect;
-    if (!anchorRect) return;
+    const textToTranslate = currentTargetEl.textContent.trim();
+    if (!textToTranslate) return;
 
-    showPopupLoadingFromRect(anchorRect);
+    showPopupLoading(currentTargetEl);
 
     try {
       const translated = await translateText(textToTranslate, settings.targetLang);
@@ -1266,70 +1209,71 @@ function initHoverTranslation() {
     }
   });
 
-  // ===== Selection-based trigger (gantikan hover-based) =====
-  // mouseup: setelah user drag-select dengan mouse
-  document.addEventListener('mouseup', () => {
-    if (!settings.hoverTranslate) return;
-    // Delay sedikit supaya selection stabil (drag-select selesai)
-    clearTimeout(selectionHideTimeout);
-    selectionHideTimeout = setTimeout(captureSelection, 10);
-  });
+  // Mouse move / hover listeners
+  let hideBtnTimeout = null;
 
-  // selectionchange: user ubah selection via keyboard (Shift+Arrow)
-  document.addEventListener('selectionchange', () => {
-    if (!settings.hoverTranslate) {
-      hideSelectionBtn();
+  document.addEventListener('mouseover', (e) => {
+    if (!settings.hoverTranslate) return;
+
+    const path = e.composedPath();
+    const el = path[0];
+    if (!el) return;
+
+    if (el === hoverBtn || el.closest('#bilisub-hover-btn') || el === popupCard || el.closest('#bilisub-popup-card')) {
+      clearTimeout(hideBtnTimeout);
       return;
     }
-    clearTimeout(selectionHideTimeout);
-    selectionHideTimeout = setTimeout(captureSelection, 10);
-  });
 
-  // ESC / klik di luar selection → hide
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      hideSelectionBtn();
-      hidePopupCard();
+    const targetEl = findTranslationTarget(el);
+    if (targetEl) {
+      clearTimeout(hideBtnTimeout);
+      currentTargetEl = targetEl;
+      positionHoverBtn(targetEl);
     }
   });
 
-  // Hide popup & btn saat klik di luar keduanya
-  document.addEventListener('mousedown', (e) => {
+  document.addEventListener('mouseout', (e) => {
     const path = e.composedPath();
-    const inHoverBtn = hoverBtn && path.includes(hoverBtn);
-    const inPopup = popupCard && path.includes(popupCard);
+    const el = path[0];
+    if (!el) return;
 
-    if (!inHoverBtn && !inPopup) {
-      hidePopupCard();
-      // Jangan langsung hideSelectionBtn — tunggu mouseup / selectionchange
-      // karena klik luar bisa jadi bagian dari drag-select baru
+    const targetEl = findTranslationTarget(el);
+    if (targetEl) {
+      hideBtnTimeout = setTimeout(() => {
+        if (hoverBtn) hoverBtn.classList.remove('show');
+      }, 600);
+    }
+  });
+
+  // Hide popup on click outside
+  document.addEventListener('click', (e) => {
+    if (popupCard && popupCard.classList.contains('show')) {
+      const path = e.composedPath();
+      const el = path[0];
+      if (el && !popupCard.contains(el) && el !== hoverBtn && !hoverBtn.contains(el)) {
+        hidePopupCard();
+      }
     }
   });
 }
 
-function positionHoverBtnFromRect(rect) {
+function positionHoverBtn(el) {
   if (!hoverBtn) return;
+  const rect = el.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
   const btnWidth = 28;
   const btnHeight = 28;
 
-  // Default: muncul di kanan atas selection
-  let top = rect.top + scrollTop - btnHeight - 8;
+  let top = rect.top + scrollTop - btnHeight / 2;
   let left = rect.right + scrollLeft - btnWidth / 2;
 
-  // Kalau kepotong atas → pindah ke bawah selection
-  if (top < scrollTop + 4) {
-    top = rect.bottom + scrollTop + 8;
+  if (left + btnWidth > window.innerWidth + scrollLeft) {
+    left = window.innerWidth + scrollLeft - btnWidth - 10;
   }
-  // Kalau kepotong kanan → mepet kanan viewport
-  if (left + btnWidth > window.innerWidth + scrollLeft - 4) {
-    left = window.innerWidth + scrollLeft - btnWidth - 4;
-  }
-  // Kalau kepotong kiri → mepet kiri viewport
-  if (left < scrollLeft + 4) {
-    left = scrollLeft + 4;
+  if (top < scrollTop) {
+    top = rect.bottom + scrollTop - btnHeight / 2;
   }
 
   hoverBtn.style.top = `${top}px`;
@@ -1337,7 +1281,7 @@ function positionHoverBtnFromRect(rect) {
   hoverBtn.classList.add('show');
 }
 
-function showPopupLoadingFromRect(rect) {
+function showPopupLoading(el) {
   if (!popupCard) return;
 
   const contentEl = popupCard.querySelector('.bilisub-popup-content');
@@ -1348,30 +1292,25 @@ function showPopupLoadingFromRect(rect) {
     </div>
   `));
 
+  const rect = el.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
   const cardWidth = 280;
-  const cardHeight = 120;
+  const cardHeight = 120; 
 
-  // Posisi popup: di bawah selection, anchor ke kiri selection
   let top = rect.bottom + scrollTop + 8;
   let left = rect.left + scrollLeft;
 
-  // Kalau kepotong kanan → mepet kanan
-  if (left + cardWidth > window.innerWidth + scrollLeft - 16) {
+  if (left + cardWidth > window.innerWidth + scrollLeft) {
     left = window.innerWidth + scrollLeft - cardWidth - 16;
   }
-  if (left < scrollLeft + 16) {
+  if (left < scrollLeft) {
     left = scrollLeft + 16;
   }
-  // Kalau kepotong bawah → muncul di atas selection
-  if (top + cardHeight > window.innerHeight + scrollTop - 16) {
+
+  if (top + cardHeight > window.innerHeight + scrollTop) {
     top = rect.top + scrollTop - cardHeight - 8;
-  }
-  // Kalau masih kepotong atas juga → paksa di atas
-  if (top < scrollTop + 16) {
-    top = scrollTop + 16;
   }
 
   popupCard.style.top = `${top}px`;

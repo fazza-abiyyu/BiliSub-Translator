@@ -1,7 +1,0 @@
-BiliSub v1.0.4
-
-[Feature] Selection-triggered translation — the translate button now appears only after you select (highlight) foreign text, instead of hovering over it. More intentional, less noisy on crowded pages.
-
-[Improvement] Robust selection anchoring — supports multi-line selections and auto-positions the button/popup so it never clips off-screen.
-
-[Improvement] Clear dismiss with Escape key or clicking outside the UI.
